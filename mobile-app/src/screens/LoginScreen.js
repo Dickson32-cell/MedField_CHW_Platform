@@ -106,7 +106,7 @@ const LoginScreen = ({ navigation }) => {
         </TouchableOpacity>
       </View>
 
-      <Text style={styles.footer}>MedField v1.1.0 | Offline-First</Text>
+      <Text style={styles.footer}>MedField v2.0.0 | Offline-First</Text>
     </View>
   );
 };

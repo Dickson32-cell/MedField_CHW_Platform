@@ -67,7 +67,7 @@ const SettingsScreen = ({ navigation }) => {
         <MenuItem
           icon="info"
           title="About"
-          subtitle="MedField v1.1.0"
+          subtitle="MedField v2.0.0"
           onPress={() => navigation.navigate('About')}
           right={<Icon name="chevron-right" size={24} color="#ccc" />}
         />

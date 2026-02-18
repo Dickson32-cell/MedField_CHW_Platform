@@ -8,7 +8,7 @@ const AboutScreen = () => {
             <View style={styles.header}>
                 <Icon name="health-and-safety" size={80} color="#2196F3" />
                 <Text style={styles.title}>MedField CHW Platform</Text>
-                <Text style={styles.version}>Version 1.1.0</Text>
+                <Text style={styles.version}>Version 2.0.0</Text>
             </View>
 
             <View style={styles.section}>

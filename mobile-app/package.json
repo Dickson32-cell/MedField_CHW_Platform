@@ -1,6 +1,6 @@
 {
   "name": "medfield-mobile",
-  "version": "1.0.0",
+  "version": "2.0.0",
   "description": "MedField CHW Mobile Application - Offline-first",
   "main": "index.js",
   "scripts": {

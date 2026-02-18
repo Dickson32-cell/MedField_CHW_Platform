@@ -187,7 +187,7 @@ For testing and evaluation purposes, the following accounts are available (passw
 
 ## Advanced Auto-Scaling Architecture
 
-This version of MedField (v1.1.0) introduces a robust, medical-grade auto-scaling engine designed for high-availability nationwide deployments.
+This version of MedField (v2.0.0) introduces a robust, medical-grade auto-scaling engine designed for high-availability nationwide deployments.
 
 ### Key Components:
 - **System Health Monitor**: A centralized brain that monitors CPU, memory, and clinical request latency.
@@ -209,7 +209,7 @@ refer to the CITATION.cff file in the root of this repository.
 If you use MedField in your research or clinical publication, please cite it as follows:
 
 **APA:**
-> Dickson, A. R. (2026). MedField CHW Platform: An Offline-First Coordination System for Community Health Workers (Version 1.1.0). Zenodo.
+> Dickson, A. R. (2026). MedField CHW Platform: An Offline-First Coordination System for Community Health Workers (Version 2.0.0). Zenodo.
 
 [See CITATION.cff for bibtex and other formats]
 

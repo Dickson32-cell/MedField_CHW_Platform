@@ -1,0 +1,30 @@
+cff-version: 1.2.0
+message: "If you use this software, please cite it as below."
+type: software
+title: "MedField - Community Health Worker Coordination Platform"
+version: 1.0.0
+date-released: 2026-02-16
+license: GPL-3.0
+repository-code: "https://github.com/Dickson32-cell/MedField_CHW_Platform"
+url: "https://github.com/Dickson32-cell/MedField_CHW_Platform"
+abstract: >-
+  An open-source digital platform designed to coordinate, manage, and empower
+  Community Health Workers (CHWs) operating in low-resource settings. Features
+  offline-first mobile application, supervisor dashboard, WHO iCCM clinical
+  decision support, DHIS2 integration, and FHIR interoperability.
+keywords:
+  - community-health-workers
+  - digital-health
+  - offline-first
+  - mhealth
+  - dhis2
+  - fhir
+  - global-health
+  - low-resource-settings
+  - iccm
+  - chps
+  - ghana
+authors:
+  - family-names: "Dickson"
+    given-names: "Abdul Rashid"
+    affiliation: "Northeastern University"

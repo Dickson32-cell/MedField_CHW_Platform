@@ -1,0 +1,94 @@
+version: "3.8"
+
+services:
+  # PostgreSQL Database
+  postgres:
+    image: postgres:15-alpine
+    container_name: medfield-db
+    environment:
+      POSTGRES_DB: medfield
+      POSTGRES_USER: medfield_user
+      POSTGRES_PASSWORD: medfield_password
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    ports:
+      - "5434:5432"
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U medfield_user"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  # Redis (for Horizontal Scaling)
+  redis:
+    image: redis:7-alpine
+    container_name: medfield-redis
+    ports:
+      - "6380:6379"
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    restart: unless-stopped
+
+  # Backend API
+  backend:
+    build:
+      context: ..
+      dockerfile: docker/backend.Dockerfile
+    container_name: medfield-api
+    environment:
+      NODE_ENV: production
+      PORT: 3000
+      DB_HOST: postgres
+      DB_PORT: 5432
+      DB_NAME: medfield
+      DB_USER: medfield_user
+      DB_PASSWORD: medfield_password
+      REDIS_URL: redis://redis:6379
+      JWT_SECRET: medfield_jwt_secret_production
+      JWT_EXPIRES_IN: 7d
+    ports:
+      - "3005:3000"
+    depends_on:
+      postgres:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+    healthcheck:
+      test:
+        [
+          "CMD",
+          "wget",
+          "--no-verbose",
+          "--tries=1",
+          "--spider",
+          "http://localhost:3000/api/health",
+        ]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 40s
+    restart: unless-stopped
+
+  # Dashboard (React)
+  dashboard:
+    build:
+      context: ..
+      dockerfile: docker/dashboard.Dockerfile
+    container_name: medfield-dashboard
+    ports:
+      - "3006:80"
+    depends_on:
+      backend:
+        condition: service_healthy
+    healthcheck:
+      test: ["CMD-SHELL", "nc -z localhost 80 || exit 1"]
+      interval: 1m
+      timeout: 10s
+      retries: 3
+    restart: unless-stopped
+
+volumes:
+  postgres_data:

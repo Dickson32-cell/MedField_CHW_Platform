@@ -1,0 +1,109 @@
+const express = require('express');
+const { Patient, Household, Visit, User } = require('../models');
+const { auth, authorize } = require('../middleware/auth');
+const { body, validationResult, param, query } = require('express-validator');
+const { Op } = require('sequelize');
+
+const PatientService = require('../services/PatientService');
+
+const router = express.Router();
+
+// GET /api/patients - Get all patients (with filters)
+router.get('/', auth, authorize('chw', 'supervisor', 'district_officer'), async (req, res) => {
+  try {
+    const result = await PatientService.getAll(req.query, req.user);
+    res.json({ success: true, data: result });
+  } catch (error) {
+    console.error('Get patients error:', error);
+    res.status(500).json({ success: false, message: 'Server error' });
+  }
+});
+
+// GET /api/patients/:id - Get single patient
+router.get('/:id', auth, authorize('chw', 'supervisor', 'district_officer'), async (req, res) => {
+  try {
+    const patient = await PatientService.getById(req.params.id);
+    if (!patient) {
+      return res.status(404).json({ success: false, message: 'Patient not found' });
+    }
+    res.json({ success: true, data: patient });
+  } catch (error) {
+    console.error('Get patient error:', error);
+    res.status(500).json({ success: false, message: 'Server error' });
+  }
+});
+
+// POST /api/patients - Create patient
+router.post('/', auth, [
+  body('first_name').notEmpty(),
+  body('date_of_birth').isISO8601(),
+  body('gender').isIn(['male', 'female', 'other']),
+  body('household_id').isUUID()
+], async (req, res) => {
+  try {
+    const errors = validationResult(req);
+    if (!errors.isEmpty()) {
+      return res.status(400).json({ success: false, errors: errors.array() });
+    }
+
+    const patient = await PatientService.create(req.body, req.userId);
+
+    res.status(201).json({
+      success: true,
+      message: 'Patient registered successfully',
+      data: patient
+    });
+  } catch (error) {
+    console.error('Create patient error:', error);
+    res.status(500).json({ success: false, message: 'Server error' });
+  }
+});
+
+// PUT /api/patients/:id - Update patient
+router.put('/:id', auth, async (req, res) => {
+  try {
+    const patient = await PatientService.update(req.params.id, req.body);
+    if (!patient) {
+      return res.status(404).json({ success: false, message: 'Patient not found' });
+    }
+
+    res.json({
+      success: true,
+      message: 'Patient updated',
+      data: patient
+    });
+  } catch (error) {
+    console.error('Update patient error:', error);
+    res.status(500).json({ success: false, message: 'Server error' });
+  }
+});
+
+// GET /api/patients/:id/visits - Get patient visit history
+router.get('/:id/visits', auth, async (req, res) => {
+  try {
+    const result = await PatientService.getVisits(req.params.id, req.query);
+    res.json({ success: true, data: result });
+  } catch (error) {
+    console.error('Get patient visits error:', error);
+    res.status(500).json({ success: false, message: 'Server error' });
+  }
+});
+
+// GET /api/patients/high-risk - Get high-risk patients
+router.get('/stats/high-risk', auth, async (req, res) => {
+  try {
+    const patients = await PatientService.getHighRisk(req.query.min_score);
+    res.json({
+      success: true,
+      data: {
+        count: patients.length,
+        patients
+      }
+    });
+  } catch (error) {
+    console.error('Get high-risk patients error:', error);
+    res.status(500).json({ success: false, message: 'Server error' });
+  }
+});
+
+module.exports = router;

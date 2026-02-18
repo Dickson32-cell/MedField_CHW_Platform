@@ -88,34 +88,40 @@ MedField_CHW_Platform/
 ├── backend/               # Node.js Express API
 │   └── src/
 │       ├── config/        # Database configuration
-│       ├── middleware/     # Auth middleware
-│       ├── models/        # Sequelize models
-│       ├── routes/        # API routes
-│       └── services/      # Business logic
+│       ├── controllers/   # Route controllers
+│       ├── middleware/     # Auth & rate limiting middleware
+│       ├── models/        # Sequelize ORM models
+│       ├── routes/        # API route definitions
+│       ├── services/      # Business logic & integrations
+│       └── utils/         # Helper utilities
 │
-├── mobile-app/            # React Native mobile app
+├── mobile-app/            # React Native mobile app (Expo)
 │   └── src/
-│       ├── screens/       # App screens
-│       ├── services/      # API & database services
-│       └── navigation/    # Navigation setup
+│       ├── screens/       # App screens (19 screens)
+│       ├── services/      # API & offline database services
+│       ├── navigation/    # Navigation configuration
+│       ├── store/         # State management
+│       └── utils/         # Utility functions
 │
 ├── dashboard/             # React supervisor dashboard
 │   └── src/
-│       ├── components/    # Reusable components
+│       ├── components/    # Reusable UI components
 │       ├── pages/         # Dashboard pages
-│       └── services/      # API services
+│       ├── services/      # API service layer
+│       └── store/         # State management
 │
 ├── docker/                # Docker configuration
 │   ├── docker-compose.yml
 │   ├── backend.Dockerfile
-│   └── dashboard.Dockerfile
+│   ├── dashboard.Dockerfile
+│   └── dashboard/nginx.conf
 │
-├── CITATION.cff           # Academic citation metadata
-├── CHANGELOG.md           # Version history
+├── CITATION.cff           # Academic citation metadata (CFF format)
+├── CHANGELOG.md           # Semantic versioning history
 ├── CODE_OF_CONDUCT.md     # Community guidelines
-├── CONTRIBUTING.md         # Contribution guide
-├── LICENSE                 # GPL v3
-└── README.md
+├── CONTRIBUTING.md        # Contribution guide
+├── LICENSE                # GPL v3
+└── README.md              # Project documentation
 ```
 
 ## API Endpoints
@@ -169,6 +175,13 @@ For testing and evaluation purposes, the following accounts are available (passw
 | **Supervisor** | `supervisor` | `supervisor123` | District monitoring and referral management. |
 | **CHW / Staff** | `chw001` | `password123` | Clinical patient data registration and visit logs. |
 
+> [!WARNING]
+> **Security Notice:** These credentials are for **local development and evaluation only**.
+> They are intentionally simple for testing purposes. Before any real-world or
+> clinical deployment, you must change all default passwords, rotate the JWT secret,
+> and disable or remove the database seed accounts. Never deploy this platform with
+> default credentials in a production or clinical environment.
+
 > [!TIP]
 > **New Staff?** The mobile app now supports a "Request Account" feature. Registered accounts remain pending until approved by the Administrator in the System Management dashboard.
 
@@ -181,6 +194,15 @@ This version of MedField (v1.1.0) introduces a robust, medical-grade auto-scalin
 - **Dynamic Worker Cluster**: Automatically scales Node.js workers up/down based on real-time load.
 - **Strategy Management**: Admins can choose between `High Performance`, `Balanced`, or `Efficiency` modes.
 - **Clinical Priority Queue**: Ensures life-critical clinical decision support requests are never delayed by background sync tasks.
+
+## Repository
+
+The source code for this project is publicly available on GitHub:
+
+**GitHub:** https://github.com/Dickson32-cell/MedField_CHW_Platform
+
+To cite this software, please use the DOI provided on the Zenodo record or
+refer to the CITATION.cff file in the root of this repository.
 
 ## Citation
 

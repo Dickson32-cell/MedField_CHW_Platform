@@ -18,7 +18,7 @@
     "@react-navigation/native": "^6.1.9",
     "@react-navigation/native-stack": "^6.9.17",
     "axios": "^1.6.5",
-    "babel-preset-expo": "^54.0.10",
+    "babel-preset-expo": "^55.0.11",
     "base64-js": "^1.5.1",
     "blob-to-buffer": "^1.2.9",
     "buffer": "^6.0.3",

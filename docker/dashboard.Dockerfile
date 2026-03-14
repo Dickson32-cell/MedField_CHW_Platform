@@ -1,5 +1,5 @@
 # Build React app
-FROM node:18-alpine as build
+FROM node:25-alpine as build
 WORKDIR /app
 COPY dashboard/package*.json ./
 RUN npm install

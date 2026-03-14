@@ -1,5 +1,5 @@
 # Build stage
-FROM node:18-alpine AS build
+FROM node:25-alpine AS build
 
 WORKDIR /app
 
@@ -9,7 +9,7 @@ RUN npm install
 COPY backend/src ./src
 
 # Production stage
-FROM node:18-alpine
+FROM node:25-alpine
 
 WORKDIR /app
 

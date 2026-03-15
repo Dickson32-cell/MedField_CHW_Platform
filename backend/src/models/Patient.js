@@ -76,6 +76,14 @@ const Patient = sequelize.define('Patient', {
     type: DataTypes.BOOLEAN,
     defaultValue: true
   }
+}, {
+  indexes: [
+    { fields: ['patient_id'] },
+    { fields: ['household_id'] },
+    { fields: ['is_active'] },
+    { fields: ['risk_score'] },
+    { fields: ['last_visit_date'] }
+  ]
 });
 
 module.exports = Patient;

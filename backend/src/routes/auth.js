@@ -4,10 +4,41 @@ const jwt = require('jsonwebtoken');
 const { User } = require('../models');
 const { Op } = require('sequelize');
 const { auth, authorize } = require('../middleware/auth');
+const { registerLimiter, authLimiter } = require('../middleware/rateLimiter');
 const { body, validationResult } = require('express-validator');
 const logger = require('../utils/logger');
 
 const router = express.Router();
+
+/**
+ * @swagger
+ * tags:
+ *   name: Auth
+ *   description: Authentication endpoints
+ */
+
+// Password validation middleware
+const validatePassword = (password) => {
+    const minLength = 8;
+    const hasUpperCase = /[A-Z]/.test(password);
+    const hasLowerCase = /[a-z]/.test(password);
+    const hasNumber = /\d/.test(password);
+    const hasSpecialChar = /[!@#$%^&*(),.?":{}|<>]/.test(password);
+    
+    if (password.length < minLength) {
+        return 'Password must be at least 8 characters long';
+    }
+    if (!hasUpperCase || !hasLowerCase) {
+        return 'Password must contain both uppercase and lowercase letters';
+    }
+    if (!hasNumber) {
+        return 'Password must contain at least one number';
+    }
+    if (!hasSpecialChar) {
+        return 'Password must contain at least one special character (!@#$%^&*(),.?":{}|<>)';
+    }
+    return null;
+};
 
 // Generate JWT tokens
 const generateTokens = (userId) => {
@@ -23,10 +54,57 @@ const generateTokens = (userId) => {
   return { accessToken, refreshToken };
 };
 
-// POST /api/auth/register (Public for Supervisors/Directors, OR Private for CHWs registered by Supervisors)
-router.post('/register', async (req, res) => {
+/**
+ * @swagger
+ * /api/auth/register:
+ *   post:
+ *     summary: Register a new user
+ *     tags: [Auth]
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             required:
+ *               - username
+ *               - email
+ *               - password
+ *               - first_name
+ *               - last_name
+ *             properties:
+ *               username:
+ *                 type: string
+ *               email:
+ *                 type: string
+ *                 format: email
+ *               password:
+ *                 type: string
+ *                 format: password
+ *               first_name:
+ *                 type: string
+ *               last_name:
+ *                 type: string
+ *               phone:
+ *                 type: string
+ *               role:
+ *                 type: string
+ *                 enum: [chw, supervisor, district_officer, admin]
+ *     responses:
+ *       201:
+ *         description: User registered successfully
+ *       400:
+ *         description: Validation error or user already exists
+ */
+router.post('/register', registerLimiter, async (req, res) => {
   try {
     const { username, email, password, first_name, last_name, phone, role, device_id } = req.body;
+
+    // Validate password strength
+    const passwordError = validatePassword(password);
+    if (passwordError) {
+      return res.status(400).json({ success: false, message: passwordError });
+    }
 
     // Check if user exists
     const existingUser = await User.findOne({
@@ -38,7 +116,7 @@ router.post('/register', async (req, res) => {
     }
 
     // Hash password
-    const hashedPassword = await bcrypt.hash(password, 10);
+    const hashedPassword = await bcrypt.hash(password, 12); // Increased from 10 to 12
 
     // Hierarchy Logic:
     let isApproved = false;
@@ -93,8 +171,35 @@ router.post('/register', async (req, res) => {
   }
 });
 
-// POST /api/auth/login
-router.post('/login', [
+/**
+ * @swagger
+ * /api/auth/login:
+ *   post:
+ *     summary: User login
+ *     tags: [Auth]
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             required:
+ *               - username
+ *               - password
+ *             properties:
+ *               username:
+ *                 type: string
+ *               password:
+ *                 type: string
+ *               device_id:
+ *                 type: string
+ *     responses:
+ *       200:
+ *         description: Login successful
+ *       401:
+ *         description: Invalid credentials
+ */
+router.post('/login', authLimiter, [
   body('username').notEmpty(),
   body('password').notEmpty()
 ], async (req, res) => {

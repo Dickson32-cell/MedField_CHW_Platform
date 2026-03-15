@@ -59,6 +59,16 @@ const authLimiter = createLimiter({
     }
 });
 
+// Stricter limiter for registration to prevent spam/abuse
+const registerLimiter = createLimiter({
+    windowMs: 60 * 60 * 1000, // 1 hour
+    max: 5, // 5 registrations per hour per IP
+    message: {
+        success: false,
+        message: 'Too many accounts created. Please try again in 1 hour.'
+    }
+});
+
 const syncLimiter = createLimiter({
     windowMs: 5 * 60 * 1000, // 5 minutes
     max: 20, // 20 push/pull events per 5 minutes
@@ -76,6 +86,7 @@ const apiLimiter = createLimiter({
 module.exports = {
     createLimiter,
     authLimiter,
+    registerLimiter,
     syncLimiter,
     apiLimiter
 };

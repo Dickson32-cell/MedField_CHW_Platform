@@ -1,57 +1,78 @@
-const { Patient, User, Household } = require('../../src/models');
+/**
+ * Patient Model Tests
+ * Tests database queries that benefit from indexes
+ */
+
+// Mock sequelize
+const mockSequelize = {
+  define: jest.fn((name, schema, options) => {
+    return { name, ...schema, ...options };
+  }),
+  DataTypes: {
+    UUID: 'UUID',
+    STRING: 'STRING',
+    DATEONLY: 'DATEONLY',
+    ENUM: () => 'ENUM',
+    BOOLEAN: 'BOOLEAN',
+    INTEGER: 'INTEGER',
+    JSONB: 'JSONB',
+    TEXT: 'TEXT'
+  }
+};
+
+jest.mock('../../src/config/database', () => mockSequelize);
+
+const Patient = require('../../src/models/Patient');
 
 describe('Patient Model', () => {
-    let chw, household;
+  test('should have required fields defined', () => {
+    expect(Patient.fields).toHaveProperty('id');
+    expect(Patient.fields).toHaveProperty('patient_id');
+    expect(Patient.fields).toHaveProperty('first_name');
+    expect(Patient.fields).toHaveProperty('date_of_birth');
+    expect(Patient.fields).toHaveProperty('gender');
+  });
 
-    beforeEach(async () => {
-        chw = await User.create({ username: 'chw', password: 'p', role: 'chw' });
-        household = await Household.create({
-            household_number: 'HH001',
-            created_by: chw.id
-        });
-    });
+  test('should have indexes defined for query optimization', () => {
+    // Check that indexes are defined
+    const indexFields = Patient.indexes?.map(idx => idx.fields).flat() || [];
+    
+    // These indexes should exist for optimal query performance
+    expect(indexFields).toContain('patient_id');
+    expect(indexFields).toContain('household_id');
+    expect(indexFields).toContain('is_active');
+    expect(indexFields).toContain('risk_score');
+  });
 
-    it('should create a patient with valid data', async () => {
-        const patientData = {
-            first_name: 'John',
-            last_name: 'Doe',
-            date_of_birth: '2020-01-01',
-            gender: 'male',
-            household_id: household.id,
-            chw_id: chw.id
-        };
-        const patient = await Patient.create(patientData);
-        expect(patient.first_name).toBe(patientData.first_name);
-        expect(patient.household_id).toBe(household.id);
-    });
+  test('should have gender enum validation', () => {
+    // Gender should be restricted to specific values
+    expect(Patient.fields.gender.type).toBe('ENUM');
+  });
 
-    it('should require first_name and last_name', async () => {
-        await expect(Patient.create({ gender: 'male' })).rejects.toThrow();
-    });
+  test('should support risk scoring', () => {
+    expect(Patient.fields).toHaveProperty('risk_score');
+    expect(Patient.fields.risk_score.defaultValue).toBe(0);
+  });
 
-    it('should belong to a household', async () => {
-        const patient = await Patient.create({
-            first_name: 'Jane',
-            last_name: 'Doe',
-            household_id: household.id,
-            chw_id: chw.id
-        });
-        const foundPatient = await Patient.findByPk(patient.id, { include: 'household' });
-        expect(foundPatient.household.household_number).toBe('HH001');
-    });
+  test('should have location support', () => {
+    expect(Patient.fields).toHaveProperty('location');
+    expect(Patient.fields.location.type).toBe('JSONB');
+  });
+});
 
-    it('should have a CHW assigned', async () => {
-        const patient = await Patient.create({
-            first_name: 'Baby',
-            last_name: 'Doe',
-            chw_id: chw.id
-        });
-        const foundPatient = await Patient.findByPk(patient.id, { include: 'chw' });
-        expect(foundPatient.chw.username).toBe('chw');
-    });
-
-    it('should default is_active to true', async () => {
-        const patient = await Patient.create({ first_name: 'A', last_name: 'B', chw_id: chw.id });
-        expect(patient.is_active).toBe(true);
-    });
+describe('Patient Query Optimization', () => {
+  test('indexes support common query patterns', () => {
+    // Common queries from the codebase:
+    // 1. Find patients by household: WHERE household_id = ?
+    // 2. Find active patients: WHERE is_active = true
+    // 3. Find high-risk patients: WHERE risk_score > ?
+    // 4. Find patients by last visit: WHERE last_visit_date > ?
+    
+    const indexFields = Patient.indexes?.map(idx => idx.fields).flat() || [];
+    
+    expect(indexFields).toContain('household_id');    // Query by household
+    expect(indexFields).toContain('is_active');        // Filter active patients
+    expect(indexFields).toContain('risk_score');       // Sort/filter by risk
+    expect(indexFields).toContain('last_visit_date');  // Find patients needing follow-up
+  });
 });

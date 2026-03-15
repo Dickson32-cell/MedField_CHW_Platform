@@ -59,6 +59,14 @@ const Task = sequelize.define('Task', {
   notes: {
     type: DataTypes.TEXT
   }
+}, {
+  indexes: [
+    { fields: ['patient_id'] },
+    { fields: ['chw_id'] },
+    { fields: ['due_date'] },
+    { fields: ['status'] },
+    { fields: ['priority'] }
+  ]
 });
 
 module.exports = Task;

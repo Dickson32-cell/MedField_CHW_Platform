@@ -5,6 +5,8 @@ const morgan = require('morgan');
 const compression = require('compression');
 const http = require('http');
 const { Server } = require('socket.io');
+const swaggerUi = require('swagger-ui-express');
+const { swaggerSpec } = require('./swagger');
 
 // Import routes
 const authRoutes = require('./routes/auth');
@@ -31,11 +33,28 @@ const app = express();
 const server = http.createServer(app);
 
 // Socket.io
+const corsOptions = {
+    origin: function (origin, callback) {
+        // Allow requests with no origin (mobile apps, postman)
+        const allowedOrigins = [
+            process.env.CLIENT_URL,
+            'http://localhost:3000',
+            'http://localhost:8081',
+            'exp://localhost:8081'
+        ].filter(Boolean);
+        
+        if (!origin || allowedOrigins.includes(origin)) {
+            callback(null, true);
+        } else {
+            callback(new Error('Not allowed by CORS'));
+        }
+    },
+    methods: ['GET', 'POST', 'PUT', 'DELETE', 'PATCH'],
+    credentials: true
+};
+
 const io = new Server(server, {
-    cors: {
-        origin: process.env.CLIENT_URL || '*',
-        methods: ['GET', 'POST']
-    }
+    cors: corsOptions
 });
 
 // Rate limiting Specialized Handlers
@@ -44,7 +63,7 @@ const { authLimiter, syncLimiter, apiLimiter } = require('./middleware/rateLimit
 // Enable GZIP compression
 app.use(compression());
 app.use(helmet());
-app.use(cors());
+app.use(cors(corsOptions));
 app.use(morgan('combined'));
 app.use(express.json({ limit: '50mb' }));
 app.use(express.urlencoded({ extended: true, limit: '50mb' }));
@@ -77,6 +96,12 @@ app.get('/api/health', (req, res) => {
         version: '1.1.0',
         workerId: process.pid
     });
+});
+
+// Swagger API documentation
+app.use('/api-docs', swaggerUi.serve, swaggerUi.setup(swaggerSpec));
+app.get('/api-docs.json', (req, res) => {
+    res.json(swaggerSpec);
 });
 
 // Stats endpoint

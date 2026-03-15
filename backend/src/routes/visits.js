@@ -4,6 +4,7 @@ const { auth, authorize } = require('../middleware/auth');
 const { body, validationResult, param, query } = require('express-validator');
 const { Op } = require('sequelize');
 const { v4: uuidv4 } = require('uuid');
+const logger = require('../utils/logger');
 
 const VisitService = require('../services/VisitService');
 
@@ -15,7 +16,7 @@ router.get('/', auth, authorize('chw', 'supervisor', 'district_officer'), async 
     const result = await VisitService.getAll(req.query, req.user);
     res.json({ success: true, data: result });
   } catch (error) {
-    console.error('Get visits error:', error);
+    logger.error({ err: error, userId: req.userId }, 'Get visits error');
     res.status(500).json({ success: false, message: 'Server error' });
   }
 });
@@ -31,7 +32,7 @@ router.get('/:id', auth, authorize('chw', 'supervisor', 'district_officer'), asy
 
     res.json({ success: true, data: visit });
   } catch (error) {
-    console.error('Get visit error:', error);
+    logger.error({ err: error, userId: req.userId }, 'Get visit error');
     res.status(500).json({ success: false, message: 'Server error' });
   }
 });
@@ -56,7 +57,7 @@ router.post('/', auth, [
       data: visit
     });
   } catch (error) {
-    console.error('Create visit error:', error);
+    logger.error({ err: error, userId: req.userId }, 'Create visit error');
     res.status(500).json({ success: false, message: 'Server error' });
   }
 });
@@ -75,7 +76,7 @@ router.put('/:id', auth, async (req, res) => {
       data: visit
     });
   } catch (error) {
-    console.error('Update visit error:', error);
+    logger.error({ err: error, userId: req.userId }, 'Update visit error');
     res.status(500).json({ success: false, message: 'Server error' });
   }
 });
@@ -86,7 +87,7 @@ router.get('/stats/summary', auth, async (req, res) => {
     const result = await VisitService.getSummary(req.query, req.user);
     res.json({ success: true, data: result });
   } catch (error) {
-    console.error('Get visit stats error:', error);
+    logger.error({ err: error, userId: req.userId }, 'Get visit stats error');
     res.status(500).json({ success: false, message: 'Server error' });
   }
 });

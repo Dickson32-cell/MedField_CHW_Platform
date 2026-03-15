@@ -3,7 +3,7 @@ const bcrypt = require('bcryptjs');
 const jwt = require('jsonwebtoken');
 const { User } = require('../models');
 const { Op } = require('sequelize');
-const { auth, authorize } = require('../middleware/auth');
+const { auth, authorize, checkTokenReuse, markTokenAsUsed } = require('../middleware/auth');
 const { registerLimiter, authLimiter } = require('../middleware/rateLimiter');
 const { body, validationResult } = require('express-validator');
 const logger = require('../utils/logger');
@@ -40,11 +40,9 @@ const validatePassword = (password) => {
     return null;
 };
 
-// Generate JWT tokens
+// Generate JWT tokens - secrets MUST be present (validated at auth.js module load)
 const generateTokens = (userId) => {
-  if (!process.env.JWT_SECRET) throw new Error('CRITICAL: JWT_SECRET environment variable is missing');
-  if (!process.env.REFRESH_TOKEN_SECRET) throw new Error('CRITICAL: REFRESH_TOKEN_SECRET environment variable is missing');
-
+  // Secrets are validated at startup in auth.js - no fallbacks here
   const accessToken = jwt.sign({ userId }, process.env.JWT_SECRET, {
     expiresIn: process.env.JWT_EXPIRES_IN || '15m'
   });
@@ -166,7 +164,7 @@ router.post('/register', registerLimiter, async (req, res) => {
       }
     });
   } catch (error) {
-    console.error('Registration error:', error);
+    logger.error({ err: error, username: req.body.username }, 'Registration error');
     res.status(500).json({ success: false, message: 'Server error' });
   }
 });
@@ -275,7 +273,7 @@ router.post('/login', authLimiter, [
       }
     });
   } catch (error) {
-    console.error('Login error:', error);
+    logger.error({ err: error, username: req.body.username }, 'Login error');
     res.status(500).json({ success: false, message: 'Server error' });
   }
 });
@@ -286,7 +284,13 @@ router.post('/refresh', [
 ], async (req, res) => {
   try {
     const { refreshToken } = req.body;
-    const decoded = jwt.verify(refreshToken, process.env.REFRESH_TOKEN_SECRET || 'refresh_secret');
+    
+    // CRITICAL: No fallback - throw if secret missing
+    if (!process.env.REFRESH_TOKEN_SECRET) {
+      throw new Error('REFRESH_TOKEN_SECRET is not configured');
+    }
+    
+    const decoded = jwt.verify(refreshToken, process.env.REFRESH_TOKEN_SECRET);
 
     const user = await User.findByPk(decoded.userId);
     if (!user || !user.refresh_token) {
@@ -295,8 +299,18 @@ router.post('/refresh', [
 
     const isMatch = await bcrypt.compare(refreshToken, user.refresh_token);
     if (!isMatch) {
-      // Refresh token reuse detected? Revoke everything? 
-      // For now, just reject.
+      // Check for token reuse attack - invalidate ALL sessions if reused
+      const { checkTokenReuse } = require('../middleware/auth');
+      const reuseDetected = await checkTokenReuse(refreshToken, user.id);
+      
+      if (reuseDetected) {
+        logger.warn({ userId: user.id, ip: req.ip }, 'TOKEN_REUSE_ATTACK: All sessions invalidated');
+        return res.status(401).json({ 
+          success: false, 
+          message: 'Security violation detected. All sessions have been invalidated. Please login again.' 
+        });
+      }
+      
       await user.update({ refresh_token: null });
       return res.status(401).json({ success: false, message: 'Invalid refresh token' });
     }
@@ -305,11 +319,16 @@ router.post('/refresh', [
     const hashedRefresh = await bcrypt.hash(tokens.refreshToken, 10);
     await user.update({ refresh_token: hashedRefresh });
 
+    // Mark old token as used for future reuse detection
+    const { markTokenAsUsed } = require('../middleware/auth');
+    markTokenAsUsed(refreshToken, user.id);
+
     res.json({
       success: true,
       data: tokens
     });
   } catch (error) {
+    logger.error({ err: error }, 'Token refresh error');
     res.status(401).json({ success: false, message: 'Invalid or expired refresh token' });
   }
 });
@@ -326,7 +345,7 @@ router.get('/me', auth, async (req, res) => {
       data: user
     });
   } catch (error) {
-    console.error('Get user error:', error);
+    logger.error({ err: error, userId: req.userId }, 'Get user error');
     res.status(500).json({ success: false, message: 'Server error' });
   }
 });
@@ -353,7 +372,7 @@ router.put('/profile', auth, [
       data: req.user
     });
   } catch (error) {
-    console.error('Update profile error:', error);
+    logger.error({ err: error, userId: req.userId }, 'Update profile error');
     res.status(500).json({ success: false, message: 'Server error' });
   }
 });
@@ -383,7 +402,7 @@ router.put('/change-password', auth, [
       message: 'Password changed successfully'
     });
   } catch (error) {
-    console.error('Change password error:', error);
+    logger.error({ err: error, userId: req.userId }, 'Change password error');
     res.status(500).json({ success: false, message: 'Server error' });
   }
 });

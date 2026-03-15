@@ -3,6 +3,7 @@ const { Patient, Household, Visit, User } = require('../models');
 const { auth, authorize } = require('../middleware/auth');
 const { body, validationResult, param, query } = require('express-validator');
 const { Op } = require('sequelize');
+const logger = require('../utils/logger');
 
 const PatientService = require('../services/PatientService');
 
@@ -14,7 +15,7 @@ router.get('/', auth, authorize('chw', 'supervisor', 'district_officer'), async 
     const result = await PatientService.getAll(req.query, req.user);
     res.json({ success: true, data: result });
   } catch (error) {
-    console.error('Get patients error:', error);
+    logger.error({ err: error, userId: req.userId }, 'Get patients error');
     res.status(500).json({ success: false, message: 'Server error' });
   }
 });
@@ -28,7 +29,7 @@ router.get('/:id', auth, authorize('chw', 'supervisor', 'district_officer'), asy
     }
     res.json({ success: true, data: patient });
   } catch (error) {
-    console.error('Get patient error:', error);
+    logger.error({ err: error, userId: req.userId }, 'Get patient error');
     res.status(500).json({ success: false, message: 'Server error' });
   }
 });
@@ -54,7 +55,7 @@ router.post('/', auth, [
       data: patient
     });
   } catch (error) {
-    console.error('Create patient error:', error);
+    logger.error({ err: error, userId: req.userId }, 'Create patient error');
     res.status(500).json({ success: false, message: 'Server error' });
   }
 });
@@ -73,7 +74,7 @@ router.put('/:id', auth, async (req, res) => {
       data: patient
     });
   } catch (error) {
-    console.error('Update patient error:', error);
+    logger.error({ err: error, userId: req.userId }, 'Update patient error');
     res.status(500).json({ success: false, message: 'Server error' });
   }
 });
@@ -84,7 +85,7 @@ router.get('/:id/visits', auth, async (req, res) => {
     const result = await PatientService.getVisits(req.params.id, req.query);
     res.json({ success: true, data: result });
   } catch (error) {
-    console.error('Get patient visits error:', error);
+    logger.error({ err: error, userId: req.userId }, 'Get patient visits error');
     res.status(500).json({ success: false, message: 'Server error' });
   }
 });
@@ -101,7 +102,7 @@ router.get('/stats/high-risk', auth, async (req, res) => {
       }
     });
   } catch (error) {
-    console.error('Get high-risk patients error:', error);
+    logger.error({ err: error, userId: req.userId }, 'Get high-risk patients error');
     res.status(500).json({ success: false, message: 'Server error' });
   }
 });

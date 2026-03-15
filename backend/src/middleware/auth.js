@@ -1,5 +1,25 @@
 const jwt = require('jsonwebtoken');
+const bcrypt = require('bcryptjs');
 const { User } = require('../models');
+const logger = require('../utils/logger');
+
+// In-memory store for used refresh token fingerprints (production should use Redis/DB)
+const usedTokenFingerprints = new Map();
+
+/**
+ * Validate that required secrets are present - NO fallbacks
+ */
+const validateSecrets = () => {
+  if (!process.env.JWT_SECRET) {
+    throw new Error('CRITICAL SECURITY: JWT_SECRET environment variable is not set. Server cannot start without it.');
+  }
+  if (!process.env.REFRESH_TOKEN_SECRET) {
+    throw new Error('CRITICAL SECURITY: REFRESH_TOKEN_SECRET environment variable is not set. Server cannot start without it.');
+  }
+};
+
+// Validate secrets on module load
+validateSecrets();
 
 const auth = async (req, res, next) => {
   try {
@@ -13,6 +33,12 @@ const auth = async (req, res, next) => {
     }
 
     const token = authHeader.split(' ')[1];
+    
+    // Verify JWT_SECRET exists (should already be validated at startup)
+    if (!process.env.JWT_SECRET) {
+      throw new Error('JWT_SECRET is missing');
+    }
+    
     const decoded = jwt.verify(token, process.env.JWT_SECRET);
 
     const user = await User.findByPk(decoded.userId);
@@ -60,4 +86,51 @@ const authorize = (...roles) => {
   };
 };
 
-module.exports = { auth, authorize };
+/**
+ * Generate fingerprint for token reuse detection
+ */
+const generateTokenFingerprint = (token) => {
+  return token.substring(0, 8) + '-' + token.length;
+};
+
+/**
+ * Check if refresh token has been reused (already invalidated)
+ * If reused, invalidate ALL user sessions for security
+ */
+const checkTokenReuse = async (refreshToken, userId) => {
+  const fingerprint = generateTokenFingerprint(refreshToken);
+  
+  if (usedTokenFingerprints.has(fingerprint)) {
+    // Token reuse detected! This is a security breach.
+    logger.warn({ userId, fingerprint }, 'REFRESH_TOKEN_REUSE_DETECTED: Invalidating all user sessions');
+    
+    // Invalidate ALL sessions for this user by clearing refresh token
+    await User.update(
+      { refresh_token: null },
+      { where: { id: userId } }
+    );
+    
+    // Mark this fingerprint as used
+    usedTokenFingerprints.set(fingerprint, {
+      usedAt: new Date(),
+      userId
+    });
+    
+    return true; // Reuse detected
+  }
+  
+  return false; // No reuse
+};
+
+/**
+ * Mark a token as used (called after successful refresh)
+ */
+const markTokenAsUsed = (refreshToken, userId) => {
+  const fingerprint = generateTokenFingerprint(refreshToken);
+  usedTokenFingerprints.set(fingerprint, {
+    usedAt: new Date(),
+    userId
+  });
+};
+
+module.exports = { auth, authorize, checkTokenReuse, markTokenAsUsed, validateSecrets };

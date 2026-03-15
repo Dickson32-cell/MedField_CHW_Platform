@@ -59,6 +59,7 @@ const auth = async (req, res, next) => {
 
     req.user = user;
     req.userId = user.id;
+    req.userRole = user.role; // Store role for easy access
     next();
   } catch (error) {
     if (error.name === 'TokenExpiredError') {

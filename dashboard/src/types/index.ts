@@ -8,12 +8,37 @@ export interface User {
   first_name: string;
   last_name: string;
   phone: string;
-  role: 'chw' | 'admin' | 'supervisor';
+  role: 'chw' | 'admin' | 'supervisor' | 'district_officer';
   is_active: boolean;
   is_approved?: boolean;
   created_at?: string;
   updated_at?: string;
 }
+
+// CHW Dashboard Types
+export interface CHWDashboardStats {
+  assigned_patients?: number;
+  assigned_households?: number;
+  today_visits?: number;
+  pending_tasks?: number;
+  pending_referrals?: number;
+  completed_visits_month?: number;
+  role: 'chw';
+}
+
+// Supervisor Dashboard Types
+export interface SupervisorDashboardStats {
+  total_chws?: number;
+  total_patients?: number;
+  total_households?: number;
+  today_visits?: number;
+  pending_tasks?: number;
+  pending_referrals?: number;
+  completed_visits_month?: number;
+  role: 'admin' | 'supervisor' | 'district_officer';
+}
+
+export type DashboardStats = CHWDashboardStats | SupervisorDashboardStats;
 
 // Patient Types
 export interface Patient {
@@ -124,16 +149,6 @@ export interface Referral {
   facility?: string;
   notes?: string;
   created_at?: string;
-}
-
-// Dashboard Types
-export interface DashboardStats {
-  total_chws?: number;
-  total_patients: number;
-  pending_tasks: number;
-  today_visits: number;
-  pending_referrals: number;
-  offline?: boolean;
 }
 
 // API Response Types

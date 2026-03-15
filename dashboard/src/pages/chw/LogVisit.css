@@ -1,0 +1,319 @@
+.log-visit {
+  padding: 16px;
+  max-width: 100%;
+  padding-bottom: 80px;
+}
+
+.page-header {
+  margin-bottom: 20px;
+}
+
+.back-link {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  color: #666;
+  text-decoration: none;
+  font-size: 0.9rem;
+  margin-bottom: 8px;
+}
+
+.page-header h1 {
+  font-size: 1.4rem;
+  font-weight: 600;
+  margin: 0;
+  color: #1a1a1a;
+}
+
+/* Form Sections */
+.visit-form {
+  display: flex;
+  flex-direction: column;
+  gap: 24px;
+}
+
+.form-section {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.section-label {
+  font-size: 0.95rem;
+  font-weight: 600;
+  color: #1a1a1a;
+}
+
+.section-label::after {
+  content: '';
+  display: block;
+  width: 40px;
+  height: 3px;
+  background: #2196F3;
+  margin-top: 4px;
+  border-radius: 2px;
+}
+
+/* Patient Select */
+.patient-select {
+  padding: 14px 16px;
+  border: 1px solid #e0e0e0;
+  border-radius: 10px;
+  font-size: 0.95rem;
+  background: white;
+  color: #333;
+  cursor: pointer;
+}
+
+.patient-select:focus {
+  outline: none;
+  border-color: #2196F3;
+}
+
+/* Visit Type Grid */
+.visit-type-grid {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 10px;
+}
+
+.type-btn {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 6px;
+  padding: 16px 12px;
+  border: 2px solid #e0e0e0;
+  border-radius: 12px;
+  background: white;
+  cursor: pointer;
+  transition: all 0.2s;
+}
+
+.type-btn.active {
+  border-color: #2196F3;
+  background: #E3F2FD;
+}
+
+.type-icon {
+  font-size: 1.5rem;
+}
+
+.type-btn span:last-child {
+  font-size: 0.85rem;
+  font-weight: 500;
+  color: #333;
+}
+
+/* Date Input */
+.date-input {
+  padding: 14px 16px;
+  border: 1px solid #e0e0e0;
+  border-radius: 10px;
+  font-size: 0.95rem;
+  background: white;
+  color: #333;
+}
+
+.date-input:focus {
+  outline: none;
+  border-color: #2196F3;
+}
+
+/* Vitals Grid */
+.vitals-grid {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 12px;
+}
+
+.vital-input {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.vital-input label {
+  font-size: 0.8rem;
+  color: #666;
+  font-weight: 500;
+}
+
+.vital-input input {
+  padding: 12px;
+  border: 1px solid #e0e0e0;
+  border-radius: 10px;
+  font-size: 0.95rem;
+}
+
+.vital-input input:focus {
+  outline: none;
+  border-color: #2196F3;
+}
+
+/* Symptoms */
+.symptoms-input {
+  display: flex;
+  gap: 8px;
+}
+
+.symptoms-input input {
+  flex: 1;
+  padding: 14px 16px;
+  border: 1px solid #e0e0e0;
+  border-radius: 10px;
+  font-size: 0.95rem;
+}
+
+.symptoms-input input:focus {
+  outline: none;
+  border-color: #2196F3;
+}
+
+.btn-add {
+  width: 48px;
+  height: 48px;
+  border: none;
+  background: #2196F3;
+  color: white;
+  border-radius: 10px;
+  font-size: 1.5rem;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.common-symptoms {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 8px;
+  margin-top: 8px;
+}
+
+.common-label {
+  font-size: 0.8rem;
+  color: #999;
+  margin-right: 4px;
+}
+
+.symptom-chip {
+  padding: 6px 12px;
+  border: 1px solid #e0e0e0;
+  border-radius: 20px;
+  background: white;
+  font-size: 0.8rem;
+  color: #666;
+  cursor: pointer;
+  transition: all 0.2s;
+}
+
+.symptom-chip.selected {
+  background: #2196F3;
+  color: white;
+  border-color: #2196F3;
+}
+
+.selected-symptoms {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin-top: 12px;
+}
+
+.symptom-tag {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 6px 12px;
+  background: #E3F2FD;
+  color: #1565C0;
+  border-radius: 20px;
+  font-size: 0.85rem;
+  font-weight: 500;
+}
+
+.symptom-tag button {
+  background: none;
+  border: none;
+  color: #1565C0;
+  font-size: 1.1rem;
+  cursor: pointer;
+  padding: 0;
+  width: 18px;
+  height: 18px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+/* Textarea */
+textarea {
+  padding: 14px 16px;
+  border: 1px solid #e0e0e0;
+  border-radius: 10px;
+  font-size: 0.95rem;
+  font-family: inherit;
+  resize: vertical;
+  min-height: 100px;
+}
+
+textarea:focus {
+  outline: none;
+  border-color: #2196F3;
+}
+
+/* Submit Button */
+.form-actions {
+  position: fixed;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  padding: 16px;
+  background: white;
+  border-top: 1px solid #e0e0e0;
+  z-index: 100;
+}
+
+.btn-submit {
+  width: 100%;
+  padding: 16px;
+  background: #4CAF50;
+  color: white;
+  border: none;
+  border-radius: 12px;
+  font-size: 1rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.2s;
+}
+
+.btn-submit:disabled {
+  background: #ccc;
+  cursor: not-allowed;
+}
+
+.btn-submit:not(:disabled):active {
+  transform: scale(0.98);
+}
+
+/* Mobile */
+@media (max-width: 480px) {
+  .log-visit {
+    padding: 12px;
+    padding-bottom: 80px;
+  }
+
+  .page-header h1 {
+    font-size: 1.2rem;
+  }
+
+  .vitals-grid {
+    gap: 10px;
+  }
+
+  .vital-input input {
+    padding: 10px;
+  }
+}

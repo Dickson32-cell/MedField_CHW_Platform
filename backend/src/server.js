@@ -105,36 +105,146 @@ app.get('/api-docs.json', (req, res) => {
     res.json(swaggerSpec);
 });
 
-// Stats endpoint
+// Stats endpoint - Role-based dashboard stats
 app.get('/api/dashboard/stats', auth, async (req, res) => {
-    // ... existing logic ...
     const { User, Patient, Visit, Task, Referral, Household } = require('./models');
-    const where = req.user.role === 'chw' ? { chw_id: req.userId } : {};
+    const Op = require('sequelize').Op;
+    
     try {
-        const [
-            totalCHWs, totalPatients, totalHouseholds, todayVisits, pendingTasks, pendingReferrals, completedVisitsThisMonth
-        ] = await Promise.all([
-            req.user.role === 'admin' || req.user.role === 'district_officer' ? User.count({ where: { role: 'chw', is_active: true } }) : 0,
-            Patient.count({ where: { is_active: true } }),
-            Household.count({ where: { is_active: true } }),
-            Visit.count({ where: { ...where, visit_date: { [require('sequelize').Op.gte]: new Date().setHours(0, 0, 0, 0) } } }),
-            Task.count({ where: { ...where, status: 'pending' } }),
-            Referral.count({ where: { status: 'pending' } }),
-            Visit.count({ where: { ...where, visit_status: 'completed', visit_date: { [require('sequelize').Op.gte]: new Date(new Date().setDate(1)) } } })
-        ]);
+        let stats = {};
+        
+        if (req.user.role === 'chw') {
+            // CHW-specific stats - only their assigned patients/visits
+            const [
+                todayVisits, pendingTasks, pendingReferrals, completedVisitsThisMonth,
+                assignedPatients, assignedHouseholds
+            ] = await Promise.all([
+                Visit.count({ where: { chw_id: req.userId, visit_date: { [Op.gte]: new Date().setHours(0, 0, 0, 0) } } }),
+                Task.count({ where: { assigned_to: req.userId, status: 'pending' } }),
+                Referral.count({ where: { chw_id: req.userId, status: 'pending' } }),
+                Visit.count({ where: { chw_id: req.userId, visit_status: 'completed', visit_date: { [Op.gte]: new Date(new Date().setDate(1)) } } }),
+                Patient.count({ where: { chw_id: req.userId, is_active: true } }),
+                Household.count({ where: { chw_id: req.userId, is_active: true } })
+            ]);
+            
+            stats = {
+                today_visits: todayVisits,
+                pending_tasks: pendingTasks,
+                pending_referrals: pendingReferrals,
+                completed_visits_month: completedVisitsThisMonth,
+                assigned_patients: assignedPatients,
+                assigned_households: assignedHouseholds,
+                role: 'chw'
+            };
+        } else {
+            // Supervisor/Admin stats - full dashboard
+            const [
+                totalCHWs, totalPatients, totalHouseholds, todayVisits, pendingTasks, pendingReferrals, completedVisitsThisMonth
+            ] = await Promise.all([
+                req.user.role === 'admin' || req.user.role === 'district_officer' ? User.count({ where: { role: 'chw', is_active: true } }) : 0,
+                Patient.count({ where: { is_active: true } }),
+                Household.count({ where: { is_active: true } }),
+                Visit.count({ where: { visit_date: { [Op.gte]: new Date().setHours(0, 0, 0, 0) } } }),
+                Task.count({ where: { status: 'pending' } }),
+                Referral.count({ where: { status: 'pending' } }),
+                Visit.count({ where: { visit_status: 'completed', visit_date: { [Op.gte]: new Date(new Date().setDate(1)) } } })
+            ]);
 
-        res.json({
-            success: true,
-            data: {
+            stats = {
                 total_chws: totalCHWs,
                 total_patients: totalPatients,
                 total_households: totalHouseholds,
                 today_visits: todayVisits,
                 pending_tasks: pendingTasks,
                 pending_referrals: pendingReferrals,
-                completed_visits_month: completedVisitsThisMonth
-            }
+                completed_visits_month: completedVisitsThisMonth,
+                role: req.user.role
+            };
+        }
+
+        res.json({
+            success: true,
+            data: stats
         });
+    } catch (e) {
+        console.error('Dashboard stats error:', e);
+        res.status(500).json({ success: false, message: 'Server error' });
+    }
+});
+
+// CHW-specific endpoints
+app.get('/api/dashboard/chw/assigned-patients', auth, async (req, res) => {
+    if (req.user.role !== 'chw') {
+        return res.status(403).json({ success: false, message: 'Access denied' });
+    }
+    
+    const { Patient } = require('./models');
+    try {
+        const patients = await Patient.findAll({
+            where: { chw_id: req.userId, is_active: true },
+            order: [['last_name', 'ASC']]
+        });
+        
+        res.json({ success: true, data: { patients } });
+    } catch (e) {
+        res.status(500).json({ success: false, message: 'Server error' });
+    }
+});
+
+app.get('/api/dashboard/chw/today-tasks', auth, async (req, res) => {
+    if (req.user.role !== 'chw') {
+        return res.status(403).json({ success: false, message: 'Access denied' });
+    }
+    
+    const { Task } = require('./models');
+    const Op = require('sequelize').Op;
+    const today = new Date().setHours(0, 0, 0, 0);
+    const tomorrow = new Date(today + 24 * 60 * 60 * 1000);
+    
+    try {
+        const tasks = await Task.findAll({
+            where: {
+                assigned_to: req.userId,
+                due_date: { [Op.gte]: new Date(today), [Op.lt]: new Date(tomorrow) },
+                status: { [Op.ne]: 'cancelled' }
+            },
+            order: [['priority', 'DESC'], ['due_date', 'ASC']]
+        });
+        
+        res.json({ success: true, data: { tasks } });
+    } catch (e) {
+        res.status(500).json({ success: false, message: 'Server error' });
+    }
+});
+
+app.get('/api/dashboard/chw/quick-patient-search', auth, async (req, res) => {
+    if (req.user.role !== 'chw') {
+        return res.status(403).json({ success: false, message: 'Access denied' });
+    }
+    
+    const { Patient } = require('./models');
+    const { query } = req.query;
+    
+    if (!query || query.length < 2) {
+        return res.status(400).json({ success: false, message: 'Search query must be at least 2 characters' });
+    }
+    
+    try {
+        const patients = await Patient.findAll({
+            where: {
+                chw_id: req.userId,
+                is_active: true,
+                [Op.or]: [
+                    { first_name: { [Op.iLike]: `%${query}%` } },
+                    { last_name: { [Op.iLike]: `%${query}%` } },
+                    { patient_id: { [Op.iLike]: `%${query}%` } }
+                ]
+            },
+            limit: 10,
+            order: [['last_name', 'ASC']]
+        });
+        
+        res.json({ success: true, data: { patients } });
     } catch (e) {
         res.status(500).json({ success: false, message: 'Server error' });
     }

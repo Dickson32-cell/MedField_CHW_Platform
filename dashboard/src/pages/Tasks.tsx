@@ -34,7 +34,7 @@ const Tasks: React.FC = () => {
     return status === 'completed' ? 'badge-success' : 'badge-warning';
   };
 
-  const handleStatusChange = (taskId: string, newStatus: string) => {
+  const handleStatusChange = (taskId: string, newStatus: 'pending' | 'in_progress' | 'completed' | 'cancelled') => {
     updateTask.mutate({ id: taskId, data: { status: newStatus } });
   };
 

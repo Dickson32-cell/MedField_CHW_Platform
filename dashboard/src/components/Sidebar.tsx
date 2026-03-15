@@ -10,7 +10,8 @@ interface SidebarProps {
 const Sidebar: React.FC<SidebarProps> = ({ user, onLogout }) => {
   const location = useLocation();
 
-  const menuItems = [
+  // Role-based menu items
+  const supervisorMenuItems = [
     { path: '/', label: 'Dashboard', icon: '📊' },
     { path: '/patients', label: 'Patients', icon: '👥' },
     { path: '/chws', label: 'CHWs', icon: '👨‍⚕️' },
@@ -21,11 +22,22 @@ const Sidebar: React.FC<SidebarProps> = ({ user, onLogout }) => {
     { path: '/map', label: 'Map View', icon: '🗺️' },
   ];
 
+  const chwMenuItems = [
+    { path: '/', label: 'Dashboard', icon: '📊' },
+    { path: '/patients', label: 'My Patients', icon: '👥' },
+    { path: '/visits', label: 'Log Visit', icon: '📅' },
+    { path: '/tasks', label: 'My Tasks', icon: '✅' },
+    { path: '/referrals', label: 'Referrals', icon: '🏥' },
+    { path: '/map', label: 'Map View', icon: '🗺️' },
+  ];
+
+  const menuItems = user?.role === 'chw' ? chwMenuItems : supervisorMenuItems;
+
   return (
     <div className="sidebar">
       <div className="sidebar-header">
         <h2>MedField</h2>
-        <p>Supervisor Dashboard</p>
+        <p>{user?.role === 'chw' ? 'Field Officer' : 'Supervisor Dashboard'}</p>
       </div>
       
       <nav className="sidebar-nav">

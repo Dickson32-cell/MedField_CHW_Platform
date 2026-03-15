@@ -37,7 +37,7 @@ const Login: React.FC<LoginProps> = ({ onLogin }) => {
       <div className="login-box">
         <div className="login-logo">
           <h1>MedField</h1>
-          <p>Supervisor Dashboard</p>
+          <p>CHW Platform</p>
         </div>
 
         <form onSubmit={handleSubmit}>

@@ -41,12 +41,12 @@ const validatePassword = (password) => {
 };
 
 // Generate JWT tokens - secrets MUST be present (validated at auth.js module load)
-const generateTokens = (userId) => {
+const generateTokens = (userId, role) => {
   // Secrets are validated at startup in auth.js - no fallbacks here
-  const accessToken = jwt.sign({ userId }, process.env.JWT_SECRET, {
+  const accessToken = jwt.sign({ userId, role }, process.env.JWT_SECRET, {
     expiresIn: process.env.JWT_EXPIRES_IN || '15m'
   });
-  const refreshToken = jwt.sign({ userId }, process.env.REFRESH_TOKEN_SECRET, {
+  const refreshToken = jwt.sign({ userId, role }, process.env.REFRESH_TOKEN_SECRET, {
     expiresIn: '7d'
   });
   return { accessToken, refreshToken };
@@ -245,7 +245,7 @@ router.post('/login', authLimiter, [
       });
     }
 
-    const { accessToken, refreshToken } = generateTokens(user.id);
+    const { accessToken, refreshToken } = generateTokens(user.id, user.role);
     const hashedRefresh = await bcrypt.hash(refreshToken, 10);
 
     // Update last login, device, and refresh token

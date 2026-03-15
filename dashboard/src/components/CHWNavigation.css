@@ -1,0 +1,45 @@
+.chw-navigation {
+  position: fixed;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  background: white;
+  border-top: 1px solid #e0e0e0;
+  display: flex;
+  justify-content: space-around;
+  padding: 8px 0;
+  z-index: 1000;
+  box-shadow: 0 -2px 10px rgba(0, 0, 0, 0.05);
+}
+
+.chw-navigation .nav-item {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 4px;
+  padding: 8px 16px;
+  text-decoration: none;
+  color: #999;
+  transition: color 0.2s;
+  flex: 1;
+}
+
+.chw-navigation .nav-item.active {
+  color: #2196F3;
+}
+
+.chw-navigation .nav-icon {
+  font-size: 1.4rem;
+}
+
+.chw-navigation .nav-label {
+  font-size: 0.7rem;
+  font-weight: 500;
+}
+
+/* Hide on larger screens if needed */
+@media (min-width: 1024px) {
+  .chw-navigation {
+    display: none;
+  }
+}

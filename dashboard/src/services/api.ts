@@ -1,4 +1,4 @@
-import axios, { AxiosInstance, AxiosError, AxiosRequestConfig, AxiosResponse } from 'axios';
+import axios, { AxiosInstance, AxiosError, AxiosRequestConfig } from 'axios';
 import type { 
   User, 
   Patient, 
@@ -10,7 +10,7 @@ import type {
   ApiResponse 
 } from '../types';
 
-const API_URL = import.meta.env.VITE_API_URL || '/api';
+const API_URL = (import.meta as any).env?.VITE_API_URL || '/api';
 
 // Create axios instance
 const api: AxiosInstance = axios.create({
@@ -23,7 +23,7 @@ const api: AxiosInstance = axios.create({
 
 // Add auth token to requests
 api.interceptors.request.use(
-  (config: AxiosRequestConfig): AxiosRequestConfig => {
+  (config) => {
     const token = localStorage.getItem('token');
     if (token && config.headers) {
       config.headers.Authorization = `Bearer ${token}`;
@@ -417,6 +417,57 @@ export const reportService = {
   }
 };
 
+// CHW Service - for CHW-specific endpoints
+export const chwService = {
+  async getMyTasks(params?: { status?: string; limit?: number; offset?: number }): 
+    Promise<ApiResponse<{ tasks: Task[]; total: number }>> {
+    try {
+      const response = await api.get('/chw/tasks', { params });
+      return response.data;
+    } catch (error) {
+      return handleApiError(error as AxiosError);
+    }
+  },
+
+  async getMyPatients(params?: { search?: string; limit?: number; offset?: number }): 
+    Promise<ApiResponse<{ patients: Patient[]; total: number }>> {
+    try {
+      const response = await api.get('/chw/patients', { params });
+      return response.data;
+    } catch (error) {
+      return handleApiError(error as AxiosError);
+    }
+  },
+
+  async getMyPatientById(id: string): Promise<ApiResponse<Patient>> {
+    try {
+      const response = await api.get(`/chw/patients/${id}`);
+      return response.data;
+    } catch (error) {
+      return handleApiError(error as AxiosError);
+    }
+  },
+
+  async getMyStats(): Promise<ApiResponse<DashboardStats>> {
+    try {
+      const response = await api.get('/chw/stats');
+      return response.data;
+    } catch (error) {
+      return handleApiError(error as AxiosError);
+    }
+  },
+
+  async getMyVisits(params?: { limit?: number; offset?: number }): 
+    Promise<ApiResponse<{ visits: Visit[]; total: number }>> {
+    try {
+      const response = await api.get('/chw/visits', { params });
+      return response.data;
+    } catch (error) {
+      return handleApiError(error as AxiosError);
+    }
+  }
+};
+
 export default {
   authService,
   userService,
@@ -427,5 +478,6 @@ export default {
   householdService,
   dashboardService,
   syncService,
-  reportService
+  reportService,
+  chwService
 };

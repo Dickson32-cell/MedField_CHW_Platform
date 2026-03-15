@@ -38,7 +38,7 @@ const Referrals: React.FC = () => {
     }
   };
 
-  const handleStatusChange = (referralId: string, newStatus: string) => {
+  const handleStatusChange = (referralId: string, newStatus: 'pending' | 'accepted' | 'completed' | 'rejected') => {
     updateReferral.mutate({ id: referralId, data: { status: newStatus } });
   };
 

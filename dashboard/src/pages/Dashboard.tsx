@@ -11,13 +11,21 @@ import {
   Legend
 } from 'chart.js';
 import { useDashboardStats, useRecentActivity } from '../hooks/useQueries';
-import { SkeletonDashboard, SkeletonStatCard } from '../components/SkeletonLoader';
+import { SkeletonDashboard } from '../components/SkeletonLoader';
+import CHWDashboard from './chw/CHWDashboard';
+import { useAuthStore } from '../store/authStore';
 
 ChartJS.register(CategoryScale, LinearScale, BarElement, ArcElement, Title, Tooltip, Legend);
 
 const Dashboard: React.FC = () => {
+  const { user } = useAuthStore();
   const { data: stats, isLoading: statsLoading, error: statsError } = useDashboardStats();
   const { data: activity, isLoading: activityLoading } = useRecentActivity();
+  
+  // Render CHW-specific dashboard for CHW role
+  if (user?.role === 'chw') {
+    return <CHWDashboard />;
+  }
 
   const visitChartData = {
     labels: ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'],
@@ -66,7 +74,7 @@ const Dashboard: React.FC = () => {
             <span>&#128100;</span>
           </div>
           <div className="stat-content">
-            <h3>{stats?.total_chws || 0}</h3>
+            <h3>{(stats as any)?.total_chws || 0}</h3>
             <p>Total CHWs</p>
           </div>
         </div>
@@ -76,7 +84,7 @@ const Dashboard: React.FC = () => {
             <span>&#129489;</span>
           </div>
           <div className="stat-content">
-            <h3>{stats?.total_patients || 0}</h3>
+            <h3>{(stats as any)?.total_patients || 0}</h3>
             <p>Total Patients</p>
           </div>
         </div>

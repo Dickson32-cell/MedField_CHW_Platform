@@ -6,6 +6,7 @@ interface SkeletonProps {
   height?: string | number;
   borderRadius?: string | number;
   className?: string;
+  style?: React.CSSProperties;
 }
 
 export const Skeleton: React.FC<SkeletonProps> = ({ 
@@ -113,3 +114,27 @@ export const SkeletonPage: React.FC = () => {
     </div>
   );
 };
+
+// Default export with type support
+interface SkeletonLoaderProps {
+  type?: 'card' | 'text' | 'table';
+  count?: number;
+}
+
+export const SkeletonLoader: React.FC<SkeletonLoaderProps> = ({ type = 'card', count = 1 }) => {
+  if (type === 'text') {
+    return <SkeletonText lines={count} />;
+  }
+  if (type === 'table') {
+    return <SkeletonTable rows={count} columns={5} />;
+  }
+  return (
+    <div>
+      {Array.from({ length: count }).map((_, i) => (
+        <SkeletonCard key={i} />
+      ))}
+    </div>
+  );
+};
+
+export default SkeletonLoader;

@@ -65,7 +65,7 @@ router.get('/', async (req, res) => {
   res.status(statusCode).json(health);
 });
 
-//**
+/**
  * @swagger
  * /api/health/ready:
  *   get:

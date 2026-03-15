@@ -7,8 +7,10 @@ import {
   taskService, 
   referralService,
   householdService,
-  dashboardService 
+  dashboardService,
+  chwService 
 } from '../services/api';
+import { useAuthStore } from '../store/authStore';
 import type { 
   User, 
   Patient, 
@@ -29,18 +31,31 @@ export const queryKeys = {
   referrals: 'referrals',
   households: 'households',
   dashboard: 'dashboard',
+  myTasks: 'myTasks',
+  myPatients: 'myPatients',
 };
 
 // Dashboard Hooks
 export const useDashboardStats = (options?: UseQueryOptions<DashboardStats, Error>) => {
+  const { user } = useAuthStore();
+  
   return useQuery({
-    queryKey: [queryKeys.dashboard, 'stats'],
+    queryKey: [queryKeys.dashboard, 'stats', user?.id],
     queryFn: async () => {
+      // Use CHW-specific endpoint if user is a CHW
+      if (user?.role === 'chw') {
+        const response = await chwService.getMyStats();
+        if (!response.success) {
+          throw new Error(response.message || 'Failed to fetch dashboard stats');
+        }
+        return response.data as DashboardStats;
+      }
+      
       const response = await dashboardService.getStats();
       if (!response.success) {
         throw new Error(response.message || 'Failed to fetch dashboard stats');
       }
-      return response.data!;
+      return response.data as DashboardStats;
     },
     ...options,
   });
@@ -56,6 +71,55 @@ export const useRecentActivity = () => {
       }
       return response.data?.recent_syncs || [];
     },
+  });
+};
+
+// CHW-specific hooks
+export const useMyTasks = (params?: { status?: string; limit?: number }) => {
+  const { user } = useAuthStore();
+  
+  return useQuery({
+    queryKey: [queryKeys.myTasks, user?.id, params],
+    queryFn: async () => {
+      const response = await chwService.getMyTasks(params);
+      if (!response.success) {
+        throw new Error(response.message || 'Failed to fetch my tasks');
+      }
+      return response.data as { tasks: Task[]; total: number };
+    },
+    enabled: !!user?.id,
+  });
+};
+
+export const useMyPatients = (params?: { search?: string; limit?: number }) => {
+  const { user } = useAuthStore();
+  
+  return useQuery({
+    queryKey: [queryKeys.myPatients, user?.id, params],
+    queryFn: async () => {
+      const response = await chwService.getMyPatients(params);
+      if (!response.success) {
+        throw new Error(response.message || 'Failed to fetch my patients');
+      }
+      return response.data as { patients: Patient[]; total: number };
+    },
+    enabled: !!user?.id,
+  });
+};
+
+export const useMyPatient = (id: string) => {
+  const { user } = useAuthStore();
+  
+  return useQuery({
+    queryKey: [queryKeys.myPatients, user?.id, id],
+    queryFn: async () => {
+      const response = await chwService.getMyPatientById(id);
+      if (!response.success) {
+        throw new Error(response.message || 'Failed to fetch patient');
+      }
+      return response.data as Patient;
+    },
+    enabled: !!user?.id && !!id,
   });
 };
 
@@ -203,6 +267,7 @@ export const useUpdatePatient = () => {
     onSuccess: (_, variables) => {
       queryClient.invalidateQueries({ queryKey: [queryKeys.patients] });
       queryClient.invalidateQueries({ queryKey: [queryKeys.patients, variables.id] });
+      queryClient.invalidateQueries({ queryKey: [queryKeys.myPatients] });
       toast.success('Patient updated successfully');
     },
     onError: (error: Error) => {
@@ -239,6 +304,7 @@ export const useCreateVisit = () => {
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: [queryKeys.visits] });
       queryClient.invalidateQueries({ queryKey: [queryKeys.dashboard] });
+      queryClient.invalidateQueries({ queryKey: [queryKeys.myTasks] });
       toast.success('Visit recorded successfully');
     },
     onError: (error: Error) => {
@@ -274,6 +340,7 @@ export const useUpdateTask = () => {
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: [queryKeys.tasks] });
+      queryClient.invalidateQueries({ queryKey: [queryKeys.myTasks] });
       queryClient.invalidateQueries({ queryKey: [queryKeys.dashboard] });
       toast.success('Task updated successfully');
     },

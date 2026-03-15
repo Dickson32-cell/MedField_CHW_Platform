@@ -1,63 +1,94 @@
-# Contributing to MedField
+# Contributing to MedField CHW Platform
 
-Welcome to MedField! We are excited to have you join our community and help improve the platform for Community Health Workers.
+Thank you for your interest in contributing to MedField!
 
-## Code of Conduct
+## 🤝 How to Contribute
 
-Please read our [CODE_OF_CONDUCT.md](CODE_OF_CONDUCT.md) before contributing to ensure a welcoming and inclusive environment.
+### Reporting Bugs
+1. Check if the bug is already reported in [Issues](https://github.com/Dickson32-cell/MedField_CHW_Platform/issues)
+2. Create a new issue with:
+   - Clear title
+   - Steps to reproduce
+   - Expected vs actual behavior
+   - Environment details
 
-## Getting Started
+### Suggesting Features
+1. Open a [Feature Request](https://github.com/Dickson32-cell/MedField_CHW_Platform/issues/new?template=feature_request.md)
+2. Explain the use case
+3. Describe potential solutions
 
-1. **Fork the Repository**: Create your own copy of the repository on GitHub.
-2. **Clone the Fork**: `git clone https://github.com/[YOUR-USERNAME]/MedField_CHW_Platform.git`
-3. **Set Up Development Environment**:
-   - **Docker (Recommended)**: Follow the Docker setup in the [README.md](README.md).
-   - **Manual Setup**: Follow the manual setup instructions in the [README.md](README.md).
+### Pull Requests
+1. Fork the repository
+2. Create a feature branch: `git checkout -b feature/your-feature`
+3. Make your changes
+4. Add tests if applicable
+5. Ensure code passes linting: `npm run lint`
+6. Commit with clear messages
+7. Push and create a PR
 
-## Development Workflow
+## 🛠 Development Setup
 
-- **Branch Naming**:
-  - `feature/` for new features
-  - `bugfix/` for bug fixes
-  - `docs/` for documentation changes
-  - `test/` for testing improvements
-- **Commit Message Format**: `type(scope): description` (e.g., `feat(mobile): add offline queue retry`).
-- **Pull Request Template**: Ensure all tests pass, the code is linted, and changes are documented.
+```bash
+# Clone the repository
+git clone https://github.com/Dickson32-cell/MedField_CHW_Platform.git
+cd MedField_CHW_Platform
 
-## Architecture Overview
+# Backend setup
+cd backend
+cp .env.example .env
+npm install
+npm run dev
 
-MedField consists of three main components:
-1. **Backend**: Node.js/Express API providing data services and integration with DHIS2/FHIR.
-2. **Dashboard**: React supervisor web application for real-time monitoring and reporting.
-3. **Mobile App**: React Native offline-first application for CHWs in the field.
+# Dashboard setup
+cd ../dashboard
+npm install
+npm start
 
-These components interact via a RESTful API and synchronized data using PouchDB.
+# Mobile app
+cd ../mobile-app
+npm install
+npm run android  # or: npm run ios
+```
 
-## Testing Requirements
+## 📋 Coding Standards
 
-All pull requests must include tests. We aim for high test coverage, especially for business logic and data processing.
-- Run tests: `cd backend && npm test`
-- Clinical decision support changes require **100% test coverage** on modified code.
+- **JavaScript**: Follow [Airbnb Style Guide](https://github.com/airbnb/javascript)
+- **Python**: Follow [PEP 8](https://www.python.org/dev/peps/pep-0008/)
+- Use meaningful variable names
+- Comment complex logic
+- Write tests for new features
 
-## Health-Critical Code Guidelines
+## 🧪 Testing
 
-Extra care must be taken when modifying health-critical modules. These require additional review:
-- Clinical decision support protocols (`backend/src/services/clinicalDecisionSupport.js`)
-- Danger sign detection logic
-- Drug dosage or treatment recommendations
-- Any WHO protocol modifications
+```bash
+# Backend tests
+cd backend
+npm test
 
-## Reporting Security Vulnerabilities
+# Run specific test suite
+npx jest tests/unit/auth.test.js
+```
 
-Please do not report security vulnerabilities via public GitHub issues. Instead, email us at [dickson.ab@northeastern.edu] for responsible disclosure.
+## 📝 Commit Messages
 
-## Localization
+Use conventional commits:
+- `feat: add new feature`
+- `fix: resolve bug`
+- `docs: update documentation`
+- `test: add tests`
+- `refactor: improve code`
+- `chore: maintenance`
 
-We welcome contributions to add new language translations. Please check the `mobile-app/src/i18n` (or equivalent) directory for language files.
+## 🔒 Security
 
-## Areas Where Help is Needed
+- Don't commit secrets or credentials
+- Report security vulnerabilities privately
+- Use environment variables for sensitive data
 
-- **Testing**: Expanding the test suite for edge cases.
-- **Localization**: Adding support for local dialects and languages.
-- **Low-bandwidth Optimization**: Improving performance in areas with poor internet connectivity.
-- **Android Performance**: Optimizing the React Native app for budget Android devices.
+## 📜 License
+
+By contributing, you agree that your contributions will be licensed under the GNU General Public License v3.
+
+---
+
+Questions? Open an issue or reach out to the maintainers.

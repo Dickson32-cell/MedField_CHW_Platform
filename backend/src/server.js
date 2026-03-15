@@ -60,6 +60,10 @@ const io = new Server(server, {
 // Rate limiting Specialized Handlers
 const { authLimiter, syncLimiter, apiLimiter } = require('./middleware/rateLimiter');
 
+// Request tracking middleware
+const { requestIdMiddleware, requestLogger } = require('./middleware/requestId');
+const { errorHandler, notFoundHandler } = require('./middleware/errorHandler');
+
 // Enable GZIP compression
 app.use(compression());
 app.use(helmet());
@@ -67,6 +71,10 @@ app.use(cors(corsOptions));
 app.use(morgan('combined'));
 app.use(express.json({ limit: '50mb' }));
 app.use(express.urlencoded({ extended: true, limit: '50mb' }));
+
+// Add request ID and logging
+app.use(requestIdMiddleware);
+app.use(requestLogger);
 
 // Scaling & Tracking middleware
 app.use(requestTracker);
@@ -87,16 +95,9 @@ app.use('/api/users', userRoutes);
 app.use('/api/dhis2', apiLimiter, dhis2Routes);
 app.use('/api/scaling', apiLimiter, scalingRoutes);
 
-// Health check
-app.get('/api/health', (req, res) => {
-    res.json({
-        success: true,
-        message: 'MedField API is running',
-        timestamp: new Date().toISOString(),
-        version: '1.1.0',
-        workerId: process.pid
-    });
-});
+// Health check routes
+const healthRoutes = require('./routes/health');
+app.use('/api/health', healthRoutes);
 
 // Swagger API documentation
 app.use('/api-docs', swaggerUi.serve, swaggerUi.setup(swaggerSpec));
@@ -138,6 +139,10 @@ app.get('/api/dashboard/stats', auth, async (req, res) => {
         res.status(500).json({ success: false, message: 'Server error' });
     }
 });
+
+// Error handling (must be after all routes)
+app.use(notFoundHandler);
+app.use(errorHandler);
 
 app.set('io', io);
 

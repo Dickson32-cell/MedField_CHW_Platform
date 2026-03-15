@@ -1,60 +1,83 @@
 # Changelog
 
-All notable changes to MedField CHW Platform will be documented in this file.
+All notable changes to this project will be documented in this file.
 
-The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
+The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
-## [2.0.0] - 2026-02-18
+---
+
+## [2.0.1] - 2026-03-14
 
 ### Added
-- **Advanced Auto-Scaling Architecture**:
-  - Vertical Scaling Manager: Dynamic connection pool sizing and adaptive response caching.
-  - Horizontal Scaling Manager: Node.js Cluster support with Redis-based session synchronization.
-  - System Health Monitor: Real-time metrics collection and autonomous scaling decisions.
-  - Circuit Breakers: Fault tolerance for external services and heavy database operations.
-  - Scaling Dashboard API: Administrative endpoints for monitoring system health and manual scaling control.
-- **Comprehensive Test Suite**:
-  - Unit tests for all Sequelize models (User, Patient, Visit, Task, Household, Referral).
-  - Unit tests for core services (Clinical Decision Support, DHIS2, PatientService, etc.).
-  - Unit tests for Auth middleware and role-based access control.
-  - Integration tests for Auth, Patients, Visits, Tasks, Sync, and Referral routes.
-  - Integrated `supertest` for robust API testing.
+- **CI/CD Pipeline**: GitHub Actions workflow for automated testing
+- **Health Check Endpoint**: Comprehensive `/api/health` with DB & Redis status
+- **Liveness/Readiness Probes**: `/api/health/live` and `/api/health/ready`
+- **CONTRIBUTING.md**: Guidelines for contributors
+- **Unit Tests**: Auth, password validation, JWT, bcrypt tests
 
 ### Changed
-- Refactored backend entry point to a cluster-aware main process (`src/index.js`).
-- Extracted Express application configuration to `src/server.js` for modularity and testability.
-- Updated Docker configuration to include Redis for horizontal scaling support.
-- Standardized README structure and fixed encoding issues in project diagrams.
+- **Security**: Increased bcrypt hash rounds from 10 to 12
+- **Security**: Added strong password validation requirements
+- **Security**: Fixed CORS to use whitelist instead of wildcard
+- **Performance**: Added database indexes to Patient and Task models
+- **API Docs**: Swagger documentation for auth endpoints
 
-## [1.0.0] - 2026-02-16
+### Fixed
+- Rate limiting on `/register` endpoint (5/hour)
+- Rate limiting on `/login` endpoint (10/min)
+
+---
+
+## [2.0.0] - 2026-02-XX
 
 ### Added
-- CHW mobile application with offline-first architecture (React Native + PouchDB)
-- Patient registration and household mapping with GPS coordinates
-- Visit logging with offline storage and background sync
-- Smart task scheduling with risk-based prioritization
-- WHO iCCM clinical decision support protocols (fever, diarrhea, pneumonia, malnutrition)
-- Automatic danger sign detection with urgent referral triggers
-- Digital referral management with bidirectional tracking
-- Supply chain reporting with threshold-based alerts
-- Supervisor web dashboard with real-time activity monitoring (React.js)
-- Performance analytics with individual and team metrics
-- Map-based visualization using Leaflet.js
-- RESTful API with Node.js/Express backend
-- PostgreSQL database with Sequelize ORM
-- JWT authentication with role-based access control (admin, supervisor, CHW, district_officer)
-- DHIS2 integration for national health information system reporting
-- HL7 FHIR interoperability layer
-- Socket.io real-time event system
-- Docker Compose deployment configuration
-- Rate limiting, Helmet security headers, and CORS protection
-- Comprehensive API documentation in README
-- GPL v3 open source license
+- **Supervisor Dashboard**: React.js web interface
+- **Mobile App**: React Native (Expo) offline-first app
+- **Authentication**: JWT-based auth with role management
+- **Patient Management**: Registration, household mapping, risk scoring
+- **Visit Logging**: GPS tracking, vitals, clinical notes
+- **Task Management**: Smart prioritization, follow-ups
+- **Referral System**: Facility referrals with tracking
+- **Supply Chain**: Inventory management for CHWs
+- **DHIS2 Integration**: Data export to DHIS2
+- **FHIR Support**: Healthcare interoperability
+- **Auto-Scaling**: Dynamic worker scaling for high load
+- **Clinical Decision Support**: IMCI-based protocols
+- **SMS Notifications**: Bulk SMS capabilities
+- **API Documentation**: Swagger/OpenAPI specs
 
 ### Security
-- bcrypt password hashing
-- JWT token-based authentication with expiration
-- Express rate limiting (100 requests/15 minutes per IP)
-- Helmet HTTP security headers
-- Input validation with express-validator
+- Rate limiting on all endpoints
+- Audit logging
+- Input sanitization
+
+### Infrastructure
+- Docker deployment
+- PostgreSQL database
+- Redis caching
+- Socket.io real-time updates
+
+---
+
+## [1.0.0] - 2025-XX-XX
+
+### Added
+- Initial release
+- Basic patient registration
+- Simple visit logging
+- Admin panel
+
+---
+
+## Upgrading
+
+### 1.x → 2.0
+- Update environment variables (see `.env.example`)
+- Run database migrations
+- Rebuild Docker images
+- Update mobile app to v2.0.0
+
+### 2.0.0 → 2.0.1
+- No database changes required
+- Just update code and restart services

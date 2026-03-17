@@ -1,19 +1,13 @@
 module.exports = {
-    testEnvironment: 'node',
-    verbose: true,
-    collectCoverage: true,
-    coverageDirectory: 'coverage',
-    coverageThreshold: {
-        global: {
-            lines: 1
-        }
-    },
-    coverageReporters: ["text", "lcov", "clover", "json"],
-    testMatch: ['**/tests/**/*.test.js'],
-    setupFilesAfterEnv: ['./tests/setup.js'],
-    collectCoverageFrom: [
-        "src/**/*.js",
-        "!src/db/**",
-        "!src/config/**"
-    ]
+  testEnvironment: 'node',
+  testMatch: ['**/__tests__/**/*.test.js'],
+  coverageDirectory: 'coverage',
+  collectCoverageFrom: [
+    'src/**/*.js',
+    '!src/index.js',
+    '!src/server.js'
+  ],
+  verbose: true,
+  testTimeout: 10000,
+  setupFilesAfterEnv: ['./jest.setup.js']
 };

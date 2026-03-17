@@ -1,0 +1,67 @@
+name: CD - Deploy to Production
+
+on:
+  workflow_dispatch:
+    inputs:
+      environment:
+        description: 'Environment to deploy'
+        required: true
+        default: 'production'
+        type: choice
+        options:
+          - staging
+          - production
+
+jobs:
+  deploy:
+    name: Deploy to ${{ github.event.inputs.environment }}
+    runs-on: ubuntu-latest
+    environment: ${{ github.event.inputs.environment }}
+    
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Check for version tag
+        id: version
+        run: |
+          if [ "${{ github.event.inputs.environment }}" = "production" ]; then
+            TAG=$(git describe --tags --abbrev=0 2>/dev/null || echo "")
+            if [ -z "$TAG" ]; then
+              echo "No version tag found for production release!"
+              exit 1
+            fi
+            echo "version=$TAG" >> $GITHUB_OUTPUT
+          else
+            echo "version=staging-$(git rev-parse --short HEAD)" >> $GITHUB_OUTPUT
+          fi
+
+      - name: Deploy to server
+        uses: appleboy/ssh-action@v1
+        with:
+          host: ${{ secrets.DEPLOY_HOST }}
+          username: ${{ secrets.DEPLOY_USER }}
+          key: ${{ secrets.DEPLOY_KEY }}
+          script: |
+            cd /opt/medfield
+            git pull origin main
+            cd backend
+            npm install --production
+            npm run migrate
+            pm2 restart medfield-api
+            cd ../dashboard
+            npm install
+            npm run build
+            pm2 restart medfield-dashboard
+
+      - name: Health check
+        run: |
+          sleep 10
+          curl -f https://api.medfield.health/health || exit 1
+
+      - name: Notify success
+        if: success()
+        run: |
+          echo "Deployment to ${{ github.event.inputs.environment }} completed successfully!"

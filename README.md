@@ -217,6 +217,33 @@ If you use MedField in your research or clinical publication, please cite it as 
 
 GPL v3 - See LICENSE file for details
 
+## Testing
+
+```bash
+# Run all tests
+npm test
+
+# Run unit tests only
+npm run test:unit
+
+# Run tests in watch mode
+npm run test:watch
+```
+
+## Database
+
+```bash
+# Run migrations
+npm run migrate
+
+# Seed database with test data
+npm run seed
+```
+
 ## Contributing
 
 Contributions are welcome! Please read our contributing guidelines before submitting pull requests.
+
+### Security
+
+For security vulnerabilities, please report via GitHub Issues with `[SECURITY]` prefix in title.

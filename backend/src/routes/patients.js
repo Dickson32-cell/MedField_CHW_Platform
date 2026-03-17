@@ -4,10 +4,14 @@ const { auth, authorize } = require('../middleware/auth');
 const { body, validationResult, param, query } = require('express-validator');
 const { Op } = require('sequelize');
 const logger = require('../utils/logger');
+const { apiLimiter } = require('../middleware/rateLimiter');
 
 const PatientService = require('../services/PatientService');
 
 const router = express.Router();
+
+// Apply rate limiting to all patient routes
+router.use(apiLimiter);
 
 // GET /api/patients - Get all patients (with filters)
 router.get('/', auth, authorize('chw', 'supervisor', 'district_officer'), async (req, res) => {

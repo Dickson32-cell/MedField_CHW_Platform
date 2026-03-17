@@ -5,10 +5,14 @@ const { body, validationResult, param, query } = require('express-validator');
 const { Op } = require('sequelize');
 const { v4: uuidv4 } = require('uuid');
 const logger = require('../utils/logger');
+const { apiLimiter } = require('../middleware/rateLimiter');
 
 const VisitService = require('../services/VisitService');
 
 const router = express.Router();
+
+// Apply rate limiting to all visit routes
+router.use(apiLimiter);
 
 // GET /api/visits - Get visits
 router.get('/', auth, authorize('chw', 'supervisor', 'district_officer'), async (req, res) => {

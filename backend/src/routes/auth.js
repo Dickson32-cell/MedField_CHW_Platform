@@ -6,6 +6,7 @@ const { Op } = require('sequelize');
 const { auth, authorize, checkTokenReuse, markTokenAsUsed } = require('../middleware/auth');
 const { registerLimiter, authLimiter } = require('../middleware/rateLimiter');
 const { body, validationResult } = require('express-validator');
+const { validationRules } = require('../middleware/validateInput');
 const logger = require('../utils/logger');
 
 const router = express.Router();
@@ -94,7 +95,7 @@ const generateTokens = (userId, role) => {
  *       400:
  *         description: Validation error or user already exists
  */
-router.post('/register', registerLimiter, async (req, res) => {
+router.post('/register', registerLimiter, validationRules.register, async (req, res) => {
   try {
     const { username, email, password, first_name, last_name, phone, role, device_id } = req.body;
 
@@ -197,16 +198,8 @@ router.post('/register', registerLimiter, async (req, res) => {
  *       401:
  *         description: Invalid credentials
  */
-router.post('/login', authLimiter, [
-  body('username').notEmpty(),
-  body('password').notEmpty()
-], async (req, res) => {
+router.post('/login', authLimiter, validationRules.login, async (req, res) => {
   try {
-    const errors = validationResult(req);
-    if (!errors.isEmpty()) {
-      return res.status(400).json({ success: false, errors: errors.array() });
-    }
-
     const { username, password, device_id } = req.body;
 
     // Find user

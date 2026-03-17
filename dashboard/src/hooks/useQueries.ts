@@ -40,7 +40,7 @@ export const useDashboardStats = (options?: UseQueryOptions<DashboardStats, Erro
   const { user } = useAuthStore();
   
   return useQuery({
-    queryKey: [queryKeys.dashboard, 'stats', user?.id],
+    queryKey: [queryKeys.dashboard, 'stats', user?.id, user?.role], // Include role in key for proper role-based rendering
     queryFn: async () => {
       // Use CHW-specific endpoint if user is a CHW
       if (user?.role === 'chw') {
@@ -57,6 +57,8 @@ export const useDashboardStats = (options?: UseQueryOptions<DashboardStats, Erro
       }
       return response.data as DashboardStats;
     },
+    staleTime: 1000 * 60 * 5, // 5 minutes
+    enabled: !!user?.id && !!user?.role,
     ...options,
   });
 };

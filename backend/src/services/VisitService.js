@@ -66,13 +66,57 @@ class VisitService {
         return visit;
     }
 
+    // Whitelist of allowed fields for create
+    static get ALLOWED_CREATE_FIELDS() {
+        return [
+            'patient_id', 'visit_type', 'visit_date', 'location', 'gps_coordinates',
+            'vitals', 'symptoms', 'diagnosis', 'treatment', 'referral',
+            'notes', 'next_visit_date', 'danger_signs_detected', 'danger_signs',
+            'duration_minutes'
+        ];
+    }
+
+    // Whitelist of allowed fields for update
+    static get ALLOWED_UPDATE_FIELDS() {
+        return [
+            'visit_status', 'location', 'vitals', 'symptoms', 'diagnosis',
+            'treatment', 'referral', 'notes', 'next_visit_date',
+            'danger_signs_detected', 'danger_signs', 'duration_minutes'
+        ];
+    }
+
+    // Sanitize input data (whitelist approach)
+    _sanitize(data, allowedFields) {
+        const sanitized = {};
+        for (const field of allowedFields) {
+            if (data[field] !== undefined) {
+                sanitized[field] = data[field];
+            }
+        }
+        return sanitized;
+    }
+
     async create(data, userId) {
+        // Prevent mass assignment
+        const sanitizedData = this._sanitize(data, VisitService.ALLOWED_CREATE_FIELDS);
+
+        // Validate required fields
+        if (!sanitizedData.patient_id || !sanitizedData.visit_date) {
+            throw new Error('Missing required fields: patient_id, visit_date');
+        }
+
+        // Validate visit_type
+        const validTypes = ['scheduled', 'follow_up', 'emergency', 'referral_follow', 'outreach'];
+        if (sanitizedData.visit_type && !validTypes.includes(sanitizedData.visit_type)) {
+            throw new Error('Invalid visit_type');
+        }
+
         // Generate visit number
         const count = await Visit.count() + 1;
         const visitNumber = `V${Date.now().toString().slice(-6)}${count.toString().padStart(4, '0')}`;
 
         const visit = await Visit.create({
-            ...data,
+            ...sanitizedData,
             visit_number: visitNumber,
             chw_id: userId,
             visit_status: 'completed',
@@ -92,10 +136,19 @@ class VisitService {
         return visit;
     }
 
-    async update(id, data) {
+    async update(id, data, userId = null, userRole = null) {
         const visit = await Visit.findByPk(id);
         if (!visit) return null;
-        return await visit.update(data);
+
+        // Authorization: CHWs can only update their own visits
+        if (userRole === 'chw' && visit.chw_id !== userId) {
+            throw new Error('Not authorized to update this visit');
+        }
+
+        // Prevent mass assignment
+        const sanitizedData = this._sanitize(data, VisitService.ALLOWED_UPDATE_FIELDS);
+
+        return await visit.update(sanitizedData);
     }
 
     async createTasks(visit, chwId) {

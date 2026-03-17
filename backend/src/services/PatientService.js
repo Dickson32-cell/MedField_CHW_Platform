@@ -85,29 +85,80 @@ class PatientService {
         return patient;
     }
 
+    // Whitelist of allowed fields for create (prevents mass assignment)
+    static get ALLOWED_CREATE_FIELDS() {
+        return [
+            'first_name', 'last_name', 'date_of_birth', 'gender', 'phone',
+            'household_id', 'is_pregnant', 'due_date', 'location',
+            'risk_factors', 'chronic_conditions', 'allergies', 'medications',
+            'emergency_contact'
+        ];
+    }
+
+    // Whitelist of allowed fields for update
+    static get ALLOWED_UPDATE_FIELDS() {
+        return [
+            'first_name', 'last_name', 'phone', 'is_pregnant', 'due_date',
+            'location', 'risk_factors', 'chronic_conditions', 'allergies',
+            'medications', 'emergency_contact', 'is_active'
+        ];
+    }
+
+    // Sanitize input data (whitelist approach)
+    _sanitize(data, allowedFields) {
+        const sanitized = {};
+        for (const field of allowedFields) {
+            if (data[field] !== undefined) {
+                sanitized[field] = data[field];
+            }
+        }
+        return sanitized;
+    }
+
     async create(data, userId) {
+        // Prevent mass assignment - only allow whitelisted fields
+        const sanitizedData = this._sanitize(data, PatientService.ALLOWED_CREATE_FIELDS);
+
+        // Validate required fields
+        if (!sanitizedData.first_name || !sanitizedData.date_of_birth || !sanitizedData.gender) {
+            throw new Error('Missing required fields: first_name, date_of_birth, gender');
+        }
+
+        // Validate gender
+        if (!['male', 'female', 'other'].includes(sanitizedData.gender)) {
+            throw new Error('Invalid gender value');
+        }
+
         // Generate patient ID
         const count = await Patient.count() + 1;
         const patientId = `P${Date.now().toString().slice(-6)}${count.toString().padStart(4, '0')}`;
 
-        const riskScore = this.calculateRiskScore(data);
+        const riskScore = this.calculateRiskScore(sanitizedData);
 
         return await Patient.create({
-            ...data,
+            ...sanitizedData,
             patient_id: patientId,
             chw_id: userId,
             risk_score: riskScore
         });
     }
 
-    async update(id, data) {
+    async update(id, data, userId = null, userRole = null) {
         const patient = await Patient.findByPk(id);
         if (!patient) return null;
 
-        const riskScore = this.calculateRiskScore({ ...patient.toJSON(), ...data });
+        // Authorization: CHWs can only update their own patients
+        if (userRole === 'chw' && patient.chw_id !== userId) {
+            throw new Error('Not authorized to update this patient');
+        }
+
+        // Prevent mass assignment - only allow whitelisted fields
+        const sanitizedData = this._sanitize(data, PatientService.ALLOWED_UPDATE_FIELDS);
+
+        const riskScore = this.calculateRiskScore({ ...patient.toJSON(), ...sanitizedData });
 
         return await patient.update({
-            ...data,
+            ...sanitizedData,
             risk_score: riskScore
         });
     }

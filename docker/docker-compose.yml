@@ -46,9 +46,11 @@ services:
       DB_NAME: medfield
       DB_USER: medfield_user
       DB_PASSWORD: medfield_password
-      REDIS_URL: redis://redis:6379
-      JWT_SECRET: medfield_jwt_secret_production
+      REDIS_HOST: redis
+      REDIS_PORT: 6379
+      JWT_SECRET: ${JWT_SECRET:?JWT_SECRET must be set}
       JWT_EXPIRES_IN: 7d
+      REFRESH_TOKEN_SECRET: ${REFRESH_TOKEN_SECRET:?REFRESH_TOKEN_SECRET must be set}
     ports:
       - "3005:3000"
     depends_on:

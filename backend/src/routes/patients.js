@@ -63,7 +63,7 @@ router.post('/', auth, [
 // PUT /api/patients/:id - Update patient
 router.put('/:id', auth, async (req, res) => {
   try {
-    const patient = await PatientService.update(req.params.id, req.body);
+    const patient = await PatientService.update(req.params.id, req.body, req.userId, req.user.role);
     if (!patient) {
       return res.status(404).json({ success: false, message: 'Patient not found' });
     }
@@ -75,7 +75,8 @@ router.put('/:id', auth, async (req, res) => {
     });
   } catch (error) {
     logger.error({ err: error, userId: req.userId }, 'Update patient error');
-    res.status(500).json({ success: false, message: 'Server error' });
+    const status = error.message === 'Not authorized to update this patient' ? 403 : 500;
+    res.status(status).json({ success: false, message: error.message || 'Server error' });
   }
 });
 

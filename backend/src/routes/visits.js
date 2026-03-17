@@ -65,7 +65,7 @@ router.post('/', auth, [
 // PUT /api/visits/:id - Update visit
 router.put('/:id', auth, async (req, res) => {
   try {
-    const visit = await VisitService.update(req.params.id, req.body);
+    const visit = await VisitService.update(req.params.id, req.body, req.userId, req.user.role);
     if (!visit) {
       return res.status(404).json({ success: false, message: 'Visit not found' });
     }
@@ -77,7 +77,8 @@ router.put('/:id', auth, async (req, res) => {
     });
   } catch (error) {
     logger.error({ err: error, userId: req.userId }, 'Update visit error');
-    res.status(500).json({ success: false, message: 'Server error' });
+    const status = error.message === 'Not authorized to update this visit' ? 403 : 500;
+    res.status(status).json({ success: false, message: error.message || 'Server error' });
   }
 });
 

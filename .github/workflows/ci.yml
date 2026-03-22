@@ -90,7 +90,7 @@ jobs:
         env:
           SNYK_TOKEN: ${{ secrets.SNYK_TOKEN }}
         with:
-          args: --org=medfield --severity-threshold=high
+          args: --org=medfield --severity-threshold=high --path=backend
 
   # Lint Code
   lint:

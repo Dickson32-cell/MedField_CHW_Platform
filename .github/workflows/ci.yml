@@ -140,8 +140,8 @@ jobs:
       - name: Build dashboard Docker image
         uses: docker/build-push-action@v5
         with:
-          context: ./dashboard
-          file: ../docker/dashboard.Dockerfile
+          context: .
+          dockerfile: docker/dashboard.Dockerfile
           push: false
           tags: medfield-dashboard:test
           cache-from: type=gha

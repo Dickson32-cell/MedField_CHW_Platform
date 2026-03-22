@@ -7,7 +7,7 @@
   "dependencies": {
     "@tanstack/react-query": "^5.17.0",
     "@tanstack/react-query-devtools": "^5.17.0",
-    "axios": "^1.6.5",
+    "axios": "^1.13.6",
     "chart.js": "^4.4.1",
     "date-fns": "^3.2.0",
     "leaflet": "^1.9.4",

@@ -86,11 +86,16 @@ jobs:
           npm audit --audit-level=moderate || true
 
       - name: Run Snyk vulnerability scan
+        if: secrets.SNYK_TOKEN != ''
         run: |
           cd backend
           npx snyk test --org=medfield --severity-threshold=high
         env:
           SNYK_TOKEN: ${{ secrets.SNYK_TOKEN }}
+
+      - name: Skip Snyk check
+        if: secrets.SNYK_TOKEN == ''
+        run: echo "Snyk token not configured, skipping vulnerability scan"
 
   # Lint Code (Disabled - existing codebase has style issues)
   # lint:

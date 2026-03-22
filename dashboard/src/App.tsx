@@ -1,4 +1,4 @@
-import React, { useEffect } from 'react';
+import React, { useEffect, useState } from 'react';
 import { BrowserRouter as Router, Routes, Route, Navigate } from 'react-router-dom';
 import { Toaster } from 'react-hot-toast';
 import { QueryProvider } from './providers/QueryProvider';
@@ -29,7 +29,7 @@ import CHWNavigation from './components/CHWNavigation';
 
 import './App.css';
 
-// Initialize auth on app load
+// Initialize auth BEFORE React renders
 initializeAuth();
 
 // Management Layout Component
@@ -70,7 +70,7 @@ const CHWLayout: React.FC = () => {
           <Route path="/patients" element={<CHWPatients />} />
           <Route path="/log-visit" element={<LogVisit />} />
           <Route path="/profile" element={<CHWProfile />} />
-          <Route path="*" element={<Navigate to="/chw" />} />
+          <Route path="*" element={<Navigate to="/" />} />
         </Routes>
       </div>
       <CHWNavigation />
@@ -78,35 +78,64 @@ const CHWLayout: React.FC = () => {
   );
 };
 
+// Loading screen component
+const LoadingScreen: React.FC = () => (
+  <div style={{
+    display: 'flex',
+    justifyContent: 'center',
+    alignItems: 'center',
+    height: '100vh',
+    background: '#f5f5f5'
+  }}>
+    <div style={{
+      textAlign: 'center',
+      fontFamily: 'Arial, sans-serif'
+    }}>
+      <div style={{
+        width: 40,
+        height: 40,
+        border: '4px solid #e0e0e0',
+        borderTop: '4px solid #2196F3',
+        borderRadius: '50%',
+        animation: 'spin 1s linear infinite',
+        margin: '0 auto 20px'
+      }} />
+      <style>{`@keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }`}</style>
+      <p>Loading MedField...</p>
+    </div>
+  </div>
+);
+
 // Main App Component
 const AppContent: React.FC = () => {
   const { isAuthenticated, user, login } = useAuthStore();
+  const [authReady, setAuthReady] = useState(false);
 
   useEffect(() => {
-    // Check for existing session
-    const token = localStorage.getItem('token');
-    const userStr = localStorage.getItem('user');
-    
-    if (token && userStr && !isAuthenticated) {
-      try {
-        const userData = JSON.parse(userStr);
-        login(token, userData);
-      } catch (e) {
-        localStorage.removeItem('token');
-        localStorage.removeItem('user');
-      }
-    }
+    // Re-initialize auth on mount (in case localStorage changed)
+    initializeAuth();
+    setAuthReady(true);
   }, []);
 
   const handleLogin = (token: string, userData: unknown) => {
     login(token, userData as any);
   };
 
+  // Show loading until auth is ready
+  if (!authReady) {
+    return <LoadingScreen />;
+  }
+
   // Not authenticated - show login
   if (!isAuthenticated) {
     return (
       <QueryProvider>
-        <Login onLogin={handleLogin} />
+        <Router>
+          <Routes>
+            <Route path="/login" element={<Login onLogin={handleLogin} />} />
+            <Route path="*" element={<Navigate to="/login" />} />
+          </Routes>
+        </Router>
         <Toaster position="top-right" />
       </QueryProvider>
     );

@@ -10,6 +10,7 @@ const { swaggerSpec } = require('./swagger');
 
 // Import routes
 const authRoutes = require('./routes/auth');
+const chwRoutes = require('./routes/chw');
 const patientRoutes = require('./routes/patients');
 const visitRoutes = require('./routes/visits');
 const taskRoutes = require('./routes/tasks');
@@ -39,6 +40,7 @@ const corsOptions = {
         const allowedOrigins = [
             process.env.CLIENT_URL,
             'http://localhost:3000',
+            'http://localhost:3006',
             'http://localhost:8081',
             'exp://localhost:8081'
         ].filter(Boolean);
@@ -82,6 +84,7 @@ app.use(scalingMiddleware);
 
 // API Routes
 app.use('/api/auth', authLimiter, authRoutes);
+app.use('/api/chw', auth, chwRoutes);
 app.use('/api/patients', auth, auditLog, patientRoutes);
 app.use('/api/visits', auth, auditLog, visitRoutes);
 app.use('/api/tasks', auth, auditLog, taskRoutes);

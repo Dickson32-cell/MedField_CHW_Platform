@@ -12,7 +12,8 @@ if (process.env.REDIS_URL || process.env.REDIS_HOST) {
         redisClient = new Redis(process.env.REDIS_URL || {
             host: process.env.REDIS_HOST || 'localhost',
             port: process.env.REDIS_PORT || 6379,
-            password: process.env.REDIS_PASSWORD
+            password: process.env.REDIS_PASSWORD,
+            lazyConnect: false
         });
 
         redisClient.on('error', (err) => {
@@ -62,9 +63,14 @@ const createLimiter = (options = {}) => {
 
     // SECURITY: Redis is REQUIRED in production - no memory store fallback
     if (isProduction()) {
-        if (!redisAvailable || !redisClient) {
+        if (!redisClient) {
             logger.error('CRITICAL: Redis unavailable in production environment. Rate limiting requires Redis for distributed operation. Please configure REDIS_URL or REDIS_HOST.');
             throw new Error('Redis is required for rate limiting in production. Set REDIS_URL or REDIS_HOST environment variable.');
+        }
+        
+        // Wait for Redis connection if not yet connected
+        if (!redisAvailable && redisClient.status === 'connecting') {
+            logger.info('Waiting for Redis connection...');
         }
         
         finalOptions.store = new RedisStore({

@@ -28,6 +28,17 @@
   color: #2196F3;
 }
 
+.chw-navigation .nav-logout {
+  background: none;
+  border: none;
+  cursor: pointer;
+  font-family: inherit;
+}
+
+.chw-navigation .nav-logout:hover {
+  color: #F44336;
+}
+
 .chw-navigation .nav-icon {
   font-size: 1.4rem;
 }

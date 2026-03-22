@@ -1,7 +1,4 @@
-version: "3.8"
-
 services:
-  # PostgreSQL Database
   postgres:
     image: postgres:15-alpine
     container_name: medfield-db
@@ -18,8 +15,8 @@ services:
       interval: 10s
       timeout: 5s
       retries: 5
+    restart: unless-stopped
 
-  # Redis (for Horizontal Scaling)
   redis:
     image: redis:7-alpine
     container_name: medfield-redis
@@ -32,11 +29,8 @@ services:
       retries: 5
     restart: unless-stopped
 
-  # Backend API
   backend:
-    build:
-      context: ..
-      dockerfile: docker/backend.Dockerfile
+    image: medfield-backend:latest
     container_name: medfield-api
     environment:
       NODE_ENV: production
@@ -48,9 +42,10 @@ services:
       DB_PASSWORD: medfield_password
       REDIS_HOST: redis
       REDIS_PORT: 6379
-      JWT_SECRET: ${JWT_SECRET:?JWT_SECRET must be set}
+      REDIS_URL: redis://redis:6379
+      JWT_SECRET: medfield_jwt_secret_2026_secure
       JWT_EXPIRES_IN: 7d
-      REFRESH_TOKEN_SECRET: ${REFRESH_TOKEN_SECRET:?REFRESH_TOKEN_SECRET must be set}
+      REFRESH_TOKEN_SECRET: medfield_refresh_secret_2026_secure
     ports:
       - "3005:3000"
     depends_on:
@@ -58,38 +53,16 @@ services:
         condition: service_healthy
       redis:
         condition: service_healthy
-    healthcheck:
-      test:
-        [
-          "CMD",
-          "wget",
-          "--no-verbose",
-          "--tries=1",
-          "--spider",
-          "http://localhost:3000/api/health",
-        ]
-      interval: 30s
-      timeout: 10s
-      retries: 3
-      start_period: 40s
     restart: unless-stopped
 
-  # Dashboard (React)
   dashboard:
-    build:
-      context: ..
-      dockerfile: docker/dashboard.Dockerfile
+    image: medfield-dashboard:latest
     container_name: medfield-dashboard
     ports:
       - "3006:80"
     depends_on:
       backend:
-        condition: service_healthy
-    healthcheck:
-      test: ["CMD-SHELL", "nc -z localhost 80 || exit 1"]
-      interval: 1m
-      timeout: 10s
-      retries: 3
+        condition: service_started
     restart: unless-stopped
 
 volumes:

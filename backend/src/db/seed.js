@@ -27,7 +27,8 @@ async function seed() {
       first_name: 'System',
       last_name: 'Administrator',
       phone: '+254700000000',
-      role: 'admin'
+      role: 'admin',
+      is_approved: true
     });
     console.log('Admin user created');
 
@@ -40,12 +41,13 @@ async function seed() {
       first_name: 'Mary',
       last_name: 'Johnson',
       phone: '+254700000001',
-      role: 'supervisor'
+      role: 'supervisor',
+      is_approved: true
     });
     console.log('Supervisor created');
 
     // Create CHWs
-    const chwPassword = await bcrypt.hash('password123', 10);
+    const chwPassword = await bcrypt.hash('chw123', 10);
     const chw1 = await User.create({
       username: 'chw001',
       email: 'chw001@medfield.org',
@@ -54,6 +56,7 @@ async function seed() {
       last_name: 'Doe',
       phone: '+254700000010',
       role: 'chw',
+      is_approved: true,
       location: { lat: 0.3476, lng: 32.5825 }
     });
 
@@ -65,6 +68,7 @@ async function seed() {
       last_name: 'Smith',
       phone: '+254700000011',
       role: 'chw',
+      is_approved: true,
       location: { lat: 0.3576, lng: 32.5925 }
     });
 
@@ -76,6 +80,7 @@ async function seed() {
       last_name: 'Ochieng',
       phone: '+254700000012',
       role: 'chw',
+      is_approved: true,
       location: { lat: 0.3376, lng: 32.5725 }
     });
     console.log('CHWs created');

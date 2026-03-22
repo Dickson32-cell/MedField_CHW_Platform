@@ -86,11 +86,11 @@ jobs:
           npm audit --audit-level=moderate || true
 
       - name: Run Snyk vulnerability scan
-        uses: snyk/actions/node@master
+        run: |
+          cd backend
+          npx snyk test --org=medfield --severity-threshold=high
         env:
           SNYK_TOKEN: ${{ secrets.SNYK_TOKEN }}
-        with:
-          args: --org=medfield --severity-threshold=high --project-directory=backend
 
   # Lint Code
   lint:
